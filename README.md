@@ -8,14 +8,14 @@ One Ocean helps users search and filter public California beaches by location, w
 
 This project is being built for a web development course (Professor Patrick Hill) and uses a full CRUD stack — MongoDB, Express, Handlebars, and Node.js — without any frontend framework (no React).
 
-> **Status:** Pre-development. Project proposal and database schema are approved/in review; implementation has not started yet. This README will be updated as the codebase comes together.
+> **Status:** In development. Project proposal and database schema are approved. API scaffolding (Express app, MongoDB connection module) is in place; routes and collections are still being built out.
 
 ## Team
 
-- Daniel Suarez
 - Joseph Bamfo
-- Ryan Lawless
 - Samantha Bryan
+- Ryan Lawless
+- Daniel Suarez
 - Tharun Varshan Jeyakumar
 
 ## Tech Stack
@@ -46,11 +46,36 @@ This project is being built for a web development course (Professor Patrick Hill
 
 ## Project Structure
 
-_To be added once the initial scaffolding is in place._
+```
+CS546.OneOceanAPI/   # Express API (MongoDB, routes, views)
+  app.js             # Express app setup (middleware, view engine, routes)
+  server.js          # Entry point — starts the HTTP server
+  config/
+    mongoConnection.js  # Reusable MongoDB client/db getter (env-driven)
+  routes/
+    index.js          # Route registration
+
+CS546.OneOceanDB/    # (reserved for seed/migration scripts)
+CS546.OneOceanUI/    # (reserved for frontend)
+```
 
 ## Getting Started
 
-_Setup instructions (install, environment variables, running locally) will be added once the initial build is underway._
+```bash
+cd CS546.OneOceanAPI
+npm install
+cp .env.example .env   # then fill in MONGO_URI / MONGO_DB_NAME / SESSION_SECRET as needed
+npm run dev            # or: npm start
+```
+
+The API reads its configuration from environment variables (see `.env.example`):
+
+| Variable | Description |
+| --- | --- |
+| `PORT` | Port the API listens on (defaults to `3000`) |
+| `SESSION_SECRET` | Secret used to sign session cookies |
+| `MONGO_URI` | MongoDB connection string (defaults to `mongodb://localhost:27017`) |
+| `MONGO_DB_NAME` | Database name to connect to (defaults to `oneocean`) |
 
 ## Data Model
 
