@@ -8,7 +8,7 @@ One Ocean helps users search and filter public California beaches by location, w
 
 This project is being built for a web development course (Professor Patrick Hill) and uses a full CRUD stack — MongoDB, Express, Handlebars, and Node.js — without any frontend framework (no React).
 
-> **Status:** In development. Project proposal and database schema are approved. API scaffolding (Express app, MongoDB connection module) is in place; routes and collections are still being built out.
+> **Status:** In development. Project proposal and database schema are approved. The site shell is in place — header/nav layout, branding, and a route + Handlebars view for every planned page — but page content is intentionally left blank for now; feature implementation happens per-ticket on separate branches. User signup/login/logout is implemented in the API (`routes/auth.js`) but not yet wired to any page's UI.
 
 ## Team
 
@@ -47,17 +47,29 @@ This project is being built for a web development course (Professor Patrick Hill
 ## Project Structure
 
 ```
-CS546.OneOceanAPI/   # Express API (MongoDB, routes, views)
+CS546.OneOceanAPI/   # Express API + Handlebars frontend (MongoDB, routes, views)
   app.js             # Express app setup (middleware, view engine, routes)
   server.js          # Entry point — starts the HTTP server
   config/
     mongoConnection.js  # Reusable MongoDB client/db getter (env-driven)
+  data/
+    beaches.js         # Beach CRUD data functions
+    users.js           # User CRUD + auth data functions
+  utils/               # Input validation helpers
   routes/
-    index.js          # Route registration
+    index.js           # Route registration
+    auth.js             # Signup/login/logout
+    beaches.js           # Find Beaches (search + detail pages)
+    community.js          # Community page
+    users.js              # Profile + Bookmarks pages
+  views/                # Handlebars templates (page content currently blank placeholders)
+    layouts/main.handlebars
+  public/               # Static assets (CSS, client-side JS, images)
 
-CS546.OneOceanDB/    # (reserved for seed/migration scripts)
-CS546.OneOceanUI/    # (reserved for frontend)
+CS546.OneOceanDB/    # MongoDB validators, indexes, migrations, and seed/import scripts
 ```
+
+There is no separate frontend project — pages are server-rendered Handlebars views served directly from `CS546.OneOceanAPI`, per the course's required stack (no React/Vue/etc.).
 
 ## Getting Started
 
@@ -66,6 +78,15 @@ cd CS546.OneOceanAPI
 npm install
 cp .env.example .env   # then fill in MONGO_URI / MONGO_DB_NAME / SESSION_SECRET as needed
 npm run dev            # or: npm start
+```
+
+Before starting the API for the first time, initialize the Users database contract:
+
+```bash
+cd CS546.OneOceanDB
+npm install
+cp .env.example .env   # use the same MONGO_URI / MONGO_DB_NAME as the API
+npm run setup
 ```
 
 The API reads its configuration from environment variables (see `.env.example`):

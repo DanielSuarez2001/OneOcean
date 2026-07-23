@@ -1,6 +1,4 @@
-import mongodb from 'mongodb';
 import bcrypt from 'bcrypt'
-import {users} from '../config/MongoCollections.js'
 
 let exportedMethods = {
     validateName (name) {
@@ -136,6 +134,17 @@ let exportedMethods = {
             throw 'something went wrong hashing the given password'
         }        
         return hashedUserPassword;
+    },
+    comparePassword(password, hashedPassword) {
+        if (!password || typeof password !== 'string')
+        {
+            throw 'password parameter must be provided and must be a string';
+        }
+        if (!hashedPassword || typeof hashedPassword !== 'string')
+        {
+            throw 'hashedPassword parameter must be provided and must be a string';
+        }
+        return bcrypt.compareSync(password, hashedPassword);
     }
 };
 

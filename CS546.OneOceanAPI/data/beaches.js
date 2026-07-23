@@ -1,4 +1,3 @@
-import mongodb from 'mongodb';
 import generalUtils from '../utils/general_utils.js'
 import beachUtils from '../utils/beach_utils.js'
 import users from './users.js'
