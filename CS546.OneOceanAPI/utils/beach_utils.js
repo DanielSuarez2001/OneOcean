@@ -19,37 +19,6 @@ let exportedMethods = {
         }
         return beachNameSanatized;
     },
-    validateBeachId(beachId) {
-        let beachIdSanatized;
-        if (!beachId)
-        {
-            throw 'beachId must be provided';
-        }
-        if (typeof beachId !== 'number')
-        {
-            if (typeof beachId === 'string')
-            {
-                beachIdSanatized = +(beachId.trim());
-                if (Number.isNaN(beachIdSanatized))
-                {
-                    throw 'if beachId is a string it must be in number form';
-                }
-            }
-            else
-            {
-                throw 'beachId must be a number or string in number form';
-            }
-        }
-        else 
-        {
-            beachIdSanatized = beachId;
-        }
-        if (beachIdSanatized <= 0)
-        {
-            throw 'beachId must be a number greater than 0';
-        }
-        return beachIdSanatized;
-    },
     validateBeachLength(beachLength) {
         let beachLengthSanatized;
         if (!beachLength)

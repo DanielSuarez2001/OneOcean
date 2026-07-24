@@ -1,4 +1,3 @@
-import mongodb from 'mongodb';
 import moment from 'moment';
 import {ObjectId} from 'mongodb';
 let exportedMethods = {
@@ -21,6 +20,37 @@ let exportedMethods = {
             throw 'Invalid ObjectID!';
         } 
         return id;
+    },
+    validateDatasetId(datasetId) {
+        let datasetIdSanatized;
+        if (!datasetId)
+        {
+            throw 'datasetId must be provided';
+        }
+        if (typeof datasetId !== 'number')
+        {
+            if (typeof datasetId === 'string')
+            {
+                datasetIdSanatized = +(datasetId.trim());
+                if (Number.isNaN(datasetIdSanatized))
+                {
+                    throw 'if datasetId is a string it must be in number form';
+                }
+            }
+            else
+            {
+                throw 'datasetId must be a number or string in number form';
+            }
+        }
+        else 
+        {
+            datasetIdSanatized = datasetId;
+        }
+        if (datasetIdSanatized <= 0)
+        {
+            throw 'datasetId must be a number greater than 0';
+        }
+        return datasetIdSanatized;
     },
     createCommentObject(firstName, lastName, comment)
     {
