@@ -3,11 +3,12 @@ import beachUtils from '../utils/beach_utils.js'
 import users from './users.js'
 import {beaches} from '../config/MongoCollections.js'
 import {ObjectId} from 'mongodb';
+const formatBeach = (beach) => ({ ...beach, _id: beach._id.toString() });
 
 
 let exportedMethods = {
     async createBeach(beachId, beachName, city, county, status, beachLength, upperLat, lowerLat, upperLon, lowerLon) {
-        let beachIdSanatized = beachUtils.validateBeachId(beachId);
+        let beachIdSanatized = generalUtils.validateDatasetId(beachId);
         let beachNameSanatized = beachUtils.validateBeachName(beachName);
         let citySanatized = beachUtils.validateBeachCity(city);
         let countySanatized = beachUtils.validateBeachCounty(county);
@@ -43,7 +44,6 @@ let exportedMethods = {
         let idStr = (insertInfo.insertedId.toString());
         let insertedBeach = Object.assign({_id:''}, newBeach);
         insertedBeach._id = idStr;
-
         return insertedBeach;
     },
 
@@ -59,7 +59,7 @@ let exportedMethods = {
           element._id = element._id.toString();
           return element;
         });
-        return beachesList;
+        return beachesList.map(formatBeach);
     },
 
     async getBeachById(id) {
@@ -67,27 +67,17 @@ let exportedMethods = {
         let id_obj = new ObjectId(idSanatized);
         const beachesCollection = await beaches();
         const currentBeach = await beachesCollection.findOne({_id: id_obj});
-        if (currentBeach === null)
-        {
-            throw 'No beach found with that id';
-        } 
-    
-        currentBeach._id = currentBeach._id.toString();
-        return currentBeach;
+        if (currentBeach === null) throw 'No beach found with that id';
+        return formatBeach(currentBeach);
     },
 
     async removeBeach(id) {
         let idSanatized = generalUtils.checkId(id)
-
         let id_obj = new ObjectId(id);
         const beachesCollection = await beaches();
         const deletionInfo =  await beachesCollection.findOneAndDelete({_id: id_obj});
-
-        if (!deletionInfo) 
-        {
-        throw `Could not delete beach with id of ${id}`;
-        }
-        return deletionInfo;   
+        if (!deletionInfo) throw `Could not delete beach with id of ${id}`;
+        return formatBeach(deletionInfo);   
     },
 
     async patchBeach(beachId, updateObject) {
@@ -170,15 +160,10 @@ let exportedMethods = {
         const patchedBeachInfo = await beachesCollection.findOneAndUpdate(
         {_id: id_obj},
         {$set: patchedBeach},
-        {returnDocument: 'after'});
-
-        if (!patchedBeachInfo)
-        {
-            throw 'Could not patch beach successfully';
-        }
-
-        patchedBeachInfo._id = patchedBeachInfo._id.toString();
-        return patchedBeachInfo;
+        {returnDocument: 'after'}
+        );
+        if (!patchedBeachInfo) throw 'Could not patch beach successfully';
+        return formatBeach(patchedBeachInfo);
   },
 
   async addBeachComment(beachId, commenterId, commentStr) {
@@ -201,14 +186,8 @@ let exportedMethods = {
             {$set: {'BeachComments': currentBeachComments}},
             {returnDocument: 'after'}
             );
-
-        if (!updatedBeachInfo)
-        {
-            throw `Could not add comment: ${commentObject} to beach: ${beachId}`;
-        }
-
-        let updatedBeach = await this.getBeachById(beachId);
-        return updatedBeach;
+        if (!updatedBeachInfo) throw `Could not add comment: ${commentObject} to beach: ${beachId}`;
+        return formatBeach(updatedBeachInfo);
     },
 
     async removeBeachComment(beachId, commentId) {
@@ -236,19 +215,9 @@ let exportedMethods = {
             {$set: {'BeachComments': currentBeachComments}},
             {returnDocument: 'after'}
             );
-
-        if (!updatedBeachInfo)
-        {
-            throw `Could not remove comment: ${commentId} from beach: ${beachId}`;
-        }
-
-        let updatedBeach = await this.getBeachById(beachId);
-        return updatedBeach;
+        if (!updatedBeachInfo) throw `Could not remove comment: ${commentId} from beach: ${beachId}`;
+        return formatBeach(updatedBeachInfo);
     }
 }
 
 export default exportedMethods;
-
-//console.log(await exportedMethods.addBeachComment('6a601138399db0547bec6a95', '6a601e3627cd3e4570dc1895', 'Wow this beach was great!'));
-
-//console.log(await exportedMethods.removeBeachComment('6a601138399db0547bec6a95', '6a61be4be0737fbfa9f6df17'));

@@ -1,6 +1,4 @@
-import mongodb from 'mongodb';
 import moment from 'moment';
-import {events} from '../config/MongoCollections.js'
 
 let exportedMethods = {
     validateEventName (eventName) {
