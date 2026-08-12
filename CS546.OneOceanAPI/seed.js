@@ -1,100 +1,65 @@
 import { dbConnection, closeConnection } from './config/mongoConnection.js';
 import beachData from './data/beaches.js';
-import advisoryData from './data/advisories.js';
 
-const DATASET_URL =
-  'https://data.ca.gov/api/3/action/datastore_search?resource_id=0ed1a88b-8260-4b20-80ea-ec714271891a&limit=500';
+const main = async () => {
+  const db = await dbConnection();
+  await db.dropDatabase(); //clears old database to start fresh
 
-const seedDatabase = async () => {
-  try {
-    await dbConnection();
+  console.log('Seeding One Ocean database...');
 
-    const response = await fetch(DATASET_URL);
+  //create Beaches with valid status values ('Active', 'Closed', or 'Unknown')
+  const beach1 = await beachData.createBeach(
+    101,                       // beachId
+    'Santa Monica State Beach',// beachName
+    'Santa Monica',            // city
+    'Los Angeles',             // county
+    'Active',                  // status (Must be Active, Closed, or Unknown)
+    3.5,                       // beachLength
+    34.0250,                   // upperLat
+    34.0050,                   // lowerLat
+    -118.4900,                 // upperLon
+    -118.5100                  // lowerLon
+  );
+  console.log('Created Beach:', beach1.beachName, 'with MongoDB _id:', beach1._id);
 
-    if (!response.ok) {
-      throw new Error(`HTTP Error! Status: ${response.status}`);
-    }
+  const beach2 = await beachData.createBeach(
+    102,                       // beachId
+    'La Jolla Cove',           // beachName
+    'San Diego',               // city
+    'San Diego',               // county
+    'Active',                  // status
+    0.5,                       // beachLength
+    32.8510,                   // upperLat
+    32.8490,                   // lowerLat
+    -117.2700,                 // upperLon
+    -117.2730                  // lowerLon
+  );
+  console.log('Created Beach:', beach2.beachName, 'with MongoDB _id:', beach2._id);
 
-    const data = await response.json();
+  const beach3 = await beachData.createBeach(
+    103,                       // beachId
+    'Huntington City Beach',   // beachName
+    'Huntington Beach',        // city
+    'Orange',                  // county
+    'Closed',                  // status
+    3.5,                       // beachLength
+    33.6650,                   // upperLat
+    33.6450,                   // lowerLat
+    -117.9900,                 // upperLon
+    -118.0100                  // lowerLon
+  );
+  console.log('Created Beach:', beach3.beachName, 'with MongoDB _id:', beach3._id);
 
-    if (!data || !data.success) {
-      throw new Error('Failed to fetch data from CA Open Data API.');
-    }
+  //test getBeachById using the generated MongoDB _id string
+  console.log('\nTesting getBeachById...');
+  const fetchedBeach = await beachData.getBeachById(beach1._id);
+  console.log('Successfully fetched from DB:', fetchedBeach.beachName);
 
-    const records = data.result.records;
-
-    let beachesAdded = 0;
-    let advisoriesAdded = 0;
-    const addedBeachIds = new Set();
-
-    for (const record of records) {
-      const beachId = String(record.station_id || record._id || '101');
-      const beachName = record.station_name || record.beach_name || 'California Public Beach';
-      const city = record.city || record.county || 'Unknown City';
-      const county = record.county || 'California';
-      const status = record.status || record.post_status || 'Open';
-      const beachLength = parseFloat(record.beach_length) || 1.0;
-
-      const upperLat = parseFloat(record.latitude) || 34.0194;
-      const lowerLat = record.latitude ? parseFloat(record.latitude) - 0.001 : 34.0184;
-      const upperLon = parseFloat(record.longitude) || -118.4912;
-      const lowerLon = record.longitude ? parseFloat(record.longitude) - 0.001 : -118.4922;
-
-      if (!addedBeachIds.has(beachId)) {
-        try {
-          await beachData.createBeach(
-            beachId,
-            beachName,
-            city,
-            county,
-            status,
-            beachLength,
-            upperLat,
-            lowerLat,
-            upperLon,
-            lowerLon
-          );
-          addedBeachIds.add(beachId);
-          beachesAdded++;
-        } catch (e) {
-        }
-      }
-
-      if (record.advisory_type || record.reason || record.posting_type) {
-        const advisoryId = String(record._id || Date.now());
-        const advisoryType = record.advisory_type || record.posting_type || 'Posting';
-        const advisoryCause = record.reason || 'Bacterial Standards Violation';
-        const advisoryDuration = record.duration_days ? `${record.duration_days} days` : '1 day';
-
-        const startDate = record.start_date || '2026-01-01';
-        const startTime = record.start_time || '08:00AM';
-        const endDate = record.end_date || '2026-01-02';
-        const endTime = record.end_time || '05:00PM';
-
-        try {
-          await advisoryData.createAdvisory(
-            advisoryId,
-            beachId,
-            advisoryType,
-            advisoryCause,
-            advisoryDuration,
-            startDate,
-            startTime,
-            endDate,
-            endTime
-          );
-          advisoriesAdded++;
-        } catch (e) {
-        }
-      }
-    }
-
-    console.log(`Successfully added ${beachesAdded} beaches and ${advisoriesAdded} advisories.`);
-  } catch (error) {
-    console.error('Error running seed script:', error);
-  } finally {
-    await closeConnection();
-  }
+  console.log('\nSeeding completed successfully!');
+  await closeConnection();
 };
 
-seedDatabase();
+main().catch((e) => {
+  console.error('Error during seeding:', e);
+  closeConnection();
+});
