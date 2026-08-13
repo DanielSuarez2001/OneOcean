@@ -4,7 +4,7 @@ import eventUtils from '../utils/event_utils.js'
 import users from './users.js'
 import {events} from '../config/MongoCollections.js'
 import {ObjectId} from 'mongodb';
-
+const formatEvent = (event) => ({ ...event, _id: event._id.toString() });
 
 let exportedMethods = {
     async createEvent(
@@ -79,8 +79,7 @@ let exportedMethods = {
         {
             throw 'No event found with that id';
         } 
-        currentEvent._id = currentEvent._id.toString();
-        return currentEvent;
+        return formatEvent(currentEvent);
     },
 
     async removeEvent(id) {
@@ -177,17 +176,15 @@ let exportedMethods = {
         {_id: id_obj},
         {$set: patchedEvent},
         {returnDocument: 'after'});
-
+        
         if (!patchedEventInfo)
         {
             throw 'Could not patch event successfully';
         }
+        return formatEvent(patchedEventInfo);
+    },
 
-        patchedEventInfo._id = patchedEventInfo._id.toString();
-        return patchedEventInfo;
-  },
-
-  async addEventAttendant(eventId, userId) {
+    async addEventAttendant(eventId, userId) {
         userId = generalUtils.checkId(userId);
         eventId = generalUtils.checkId(eventId);
 
@@ -206,7 +203,7 @@ let exportedMethods = {
         
         let id_obj = new ObjectId(eventId);
         const eventsCollection = await events();
-        const updatedEventInfo =  await eventsCollection.updateOne(
+        const updatedEventInfo =  await eventsCollection.findOneAndUpdate(
             {_id: id_obj},
             {$set: {'attendants': currentAttendants}},
             {returnDocument: 'after'}
@@ -216,9 +213,7 @@ let exportedMethods = {
         {
             throw `Could not add attendant: ${userId} to event: ${eventId}`;
         }
-
-        let updatedEvent = await this.getEventById(eventId);
-        return updatedEvent;
+        return formatEvent(updatedEventInfo);
     },
 
     async removeEventAttendant(eventId, userId) {
@@ -241,7 +236,7 @@ let exportedMethods = {
 
         let id_obj = new ObjectId(eventId);
         const eventsCollection = await events();
-        const updatedEventInfo =  await eventsCollection.updateOne(
+        const updatedEventInfo =  await eventsCollection.findOneAndUpdate(
             {_id: id_obj},
             {$set: {'attendants': currentAttendants}},
             {returnDocument: 'after'}
@@ -251,9 +246,7 @@ let exportedMethods = {
         {
             throw `Could not remove attendant: ${userId} from event: ${eventId}`;
         }
-
-        let updatedEvent = await this.getEventById(eventId);
-        return updatedEvent;
+        return formatEvent(updatedEventInfo);
     },
 
     async addEventComment(eventId, commenterId, commentStr) {
@@ -263,7 +256,7 @@ let exportedMethods = {
         let currentEvent = await this.getEventById(eventId);
         let currentCommenter = await users.getUserById(commenterId);
 
-        let commentObject = generalUtils.createCommentObject(currentCommenter.firstName, currentCommenter.lastName, commentStr);
+        let commentObject = generalUtils.createCommentObject(currentCommenter._id, currentCommenter.firstName, currentCommenter.lastName, commentStr);
 
         let currentEventComments = currentEvent.EventComments;
         currentEventComments.push(commentObject);
@@ -271,7 +264,7 @@ let exportedMethods = {
         
         let id_obj = new ObjectId(eventId);
         const eventsCollection = await events();
-        const updatedEventInfo =  await eventsCollection.updateOne(
+        const updatedEventInfo =  await eventsCollection.findOneAndUpdate(
             {_id: id_obj},
             {$set: {'EventComments': currentEventComments}},
             {returnDocument: 'after'}
@@ -281,9 +274,7 @@ let exportedMethods = {
         {
             throw `Could not add comment: ${commentObject} to event: ${eventId}`;
         }
-
-        let updatedEvent = await this.getEventById(eventId);
-        return updatedEvent;
+        return formatEvent(updatedEventInfo);
     },
 
     async removeEventComment(eventId, commentId) {
@@ -306,7 +297,7 @@ let exportedMethods = {
 
         let id_obj = new ObjectId(eventId);
         const eventsCollection = await events();
-        const updatedEventInfo =  await eventsCollection.updateOne(
+        const updatedEventInfo =  await eventsCollection.findOneAndUpdate(
             {_id: id_obj},
             {$set: {'EventComments': currentEventComments}},
             {returnDocument: 'after'}
@@ -316,9 +307,7 @@ let exportedMethods = {
         {
             throw `Could not remove comment: ${commentId} from event: ${eventId}`;
         }
-
-        let updatedEvent = await this.getEventById(eventId);
-        return updatedEvent;
+        return formatEvent(updatedEventInfo);
     }
 }
 
@@ -331,4 +320,5 @@ export default exportedMethods;
 //console.log(await exportedMethods.addEventComment('6a61bad8c9d123831ef8312e', '6a601e3627cd3e4570dc1895', 'This code sucks!'));
 
 //console.log(await exportedMethods.removeEventComment('6a61bad8c9d123831ef8312e', '6a61bd54d841964151d07187'));
+
 
