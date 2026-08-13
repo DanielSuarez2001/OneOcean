@@ -3,62 +3,98 @@ import usersData from '../data/users.js';
 
 const router = Router();
 
-const sessionUser = (user) => ({ id: user._id, email: user.email, firstName: user.firstName });
-
-const publicUser = (user) => {
-  const { hashedPassword, ...rest } = user;
-  return rest;
-};
-
+// ==========================================
+// 1. GET /signup (Show Signup Form)
+// ==========================================
 router.get('/signup', (req, res) => {
-  res.render('signup', { title: 'Sign Up' });
+  //if already logged in, send to homepage
+  if (req.session && req.session.user) {
+    return res.redirect('/');
+  }
+  return res.render('signup', { title: 'Sign Up' });
 });
 
+// ==========================================
+// 2. GET /login (Show Login Form)
+// ==========================================
 router.get('/login', (req, res) => {
-  res.render('login', { title: 'Log In' });
+  //if already logged in, send to homepage
+  if (req.session && req.session.user) {
+    return res.redirect('/');
+  }
+  return res.render('login', { title: 'Log In' });
 });
 
+// ==========================================
+// 3. POST /signup (Handle Signup Form)
+// ==========================================
 router.post('/signup', async (req, res) => {
   const { firstName, lastName, email, gender, city, state, age, password } = req.body;
 
-  let newUser;
   try {
-    newUser = await usersData.createUser(firstName, lastName, email, gender, city, state, age, password);
-  } catch (e) {
-    const message = typeof e === 'string' ? e : 'Could not create user';
-    return res.status(/already exists/i.test(message) ? 409 : 400).json({ error: message });
-  }
+    const parsedAge = parseInt(age, 10);
+    const newUser = await usersData.createUser(
+      firstName,
+      lastName,
+      email,
+      gender,
+      city,
+      state,
+      parsedAge,
+      password
+    );
 
-  req.session.regenerate((err) => {
-    if (err) return res.status(500).json({ error: 'Could not start session' });
-    req.session.user = sessionUser(newUser);
-    return res.status(201).json(publicUser(newUser));
-  });
+    req.session.user = {
+      _id: newUser._id.toString(),
+      email: newUser.email,
+      firstName: newUser.firstName
+    };
+
+    return res.redirect('/');
+  } catch (e) {
+    return res.status(400).render('signup', {
+      title: 'Sign Up',
+      error: typeof e === 'string' ? e : 'Could not create user',
+      hasErrors: true,
+      userInputs: req.body
+    });
+  }
 });
 
+// ==========================================
+// 4. POST /login (Handle Login Form)
+// ==========================================
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  let user;
   try {
-    user = await usersData.checkLogin(email, password);
-  } catch (e) {
-    const message = typeof e === 'string' ? e : 'Could not log in';
-    return res.status(/invalid/i.test(message) ? 401 : 400).json({ error: message });
-  }
+    const user = await usersData.checkLogin(email, password);
+    req.session.user = {
+      _id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName
+    };
 
-  req.session.regenerate((err) => {
-    if (err) return res.status(500).json({ error: 'Could not start session' });
-    req.session.user = sessionUser(user);
-    return res.status(200).json(publicUser(user));
-  });
+    return res.redirect('/');
+  } catch (e) {
+    return res.status(400).render('login', {
+      title: 'Log In',
+      error: 'Invalid email or password.',
+      hasErrors: true,
+      email: email
+    });
+  }
 });
 
+// ==========================================
+// 5. GET /logout (Handle Logout)
+// ==========================================
 router.get('/logout', (req, res) => {
   req.session.destroy((err) => {
-    if (err) return res.status(500).json({ error: 'Could not log out' });
-    res.clearCookie('AuthenticationState');
-    return res.status(200).json({ message: 'Logged out successfully' });
+    if (err) {
+      return res.status(500).render('error', { error: 'Could not log out.' });
+    }
+    return res.redirect('/login');
   });
 });
 

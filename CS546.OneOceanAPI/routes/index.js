@@ -13,8 +13,8 @@ const constructorMethod = (app) => {
   app.use('/beaches', beachesRoutes);
   app.use('/community', communityRoutes);
 
-  app.use((req, res) => {
-    res.status(404).json({ error: 'Route not found' });
+  app.use('/{*splat}', (req, res) => {
+    res.status(404).render('error', { error: 'Page Not Found' });
   });
 };
 
