@@ -1,3 +1,5 @@
+import {ObjectId} from 'mongodb';
+
 let exportedMethods = {
     validateBeachName (beachName) {
         if (!beachName || beachName === undefined || beachName === null)
@@ -125,7 +127,74 @@ let exportedMethods = {
             throw 'status parameter must be either Active, Closed, or Unknown';
         }
         return statusSanatized
-    }
+    },
+    validateRating(rating) {
+        let ratingSanatized;
+        if (!rating)
+        {
+            throw `rating must be provided`;
+        }
+        if (typeof rating !== 'number')
+        {
+            if (typeof rating === 'string')
+            {
+                ratingSanatized = +(rating.trim());
+                if (Number.isNaN(ratingSanatized))
+                {
+                    throw `if rating is a string it must be in number form`;
+                }
+            }
+            else
+            {
+                throw `rating must be a number or string in number form`;
+            }
+        }
+        else 
+        {
+            ratingSanatized = rating;
+        }
+        if (ratingSanatized <= 0 || ratingSanatized > 5)
+        {
+            throw 'rating must be a number between 1 and 5';
+        }
+        return ratingSanatized;
+    },
+    createRatingObject(raterId, firstName, lastName, ratingStr)
+    {
+        let ratingObject = 
+        {
+            _id: null,
+            raterId: null,
+            name: null,
+            rating: null
+        }
+
+        if (!raterId || !firstName || !lastName || !ratingStr)
+        {
+            throw 'raterId, firstName, lastName, and ratingStr must be provided';
+        }
+        if (typeof raterId !== 'string' || typeof firstName !== 'string' || typeof lastName !== 'string'|| typeof ratingStr !== 'string')
+        {
+            throw 'raterId, firstName, lastName, and ratingStr must be strings';
+        }
+
+        raterId = raterId.trim();
+        firstName = firstName.trim();
+        lastName = lastName.trim();
+        ratingStr = ratingStr.trim();
+
+        if (raterId.length === 0 || firstName.length === 0 || lastName.length === 0 || ratingStr.length === 0)
+        {
+            throw 'raterId, firstName, lastName, and ratingStr cannot be empty strings';
+        }
+
+        ratingObject._id = new ObjectId();
+        ratingObject.raterId = new ObjectId(raterId);
+        ratingObject.name = firstName + " " + lastName;
+        ratingObject.rating = this.validateRating(ratingStr);
+
+        return ratingObject
+    },
 };
 
 export default exportedMethods;

@@ -1,5 +1,6 @@
 import moment from 'moment';
 import {ObjectId} from 'mongodb';
+
 let exportedMethods = {
     checkId(id) {
         if (!id || id === undefined || id === null) 
@@ -52,25 +53,27 @@ let exportedMethods = {
         }
         return datasetIdSanatized;
     },
-    createCommentObject(firstName, lastName, comment)
+    createCommentObject(commenterId, firstName, lastName, comment)
     {
         let commentObject = 
         {
             _id: null,
+            commenterId: null,
             name: null,
             postTime: null,
             comment: null
         }
 
-        if (!firstName || !lastName || !comment)
+        if (!commenterId || !firstName || !lastName || !comment)
         {
-            throw 'firstName, lastName, and comment must be provided';
+            throw 'commenterId, firstName, lastName, and comment must be provided';
         }
-        if (typeof firstName !== 'string' || typeof lastName !== 'string'|| typeof comment !== 'string')
+        if (typeof commenterId !== 'string' || typeof firstName !== 'string' || typeof lastName !== 'string'|| typeof comment !== 'string')
         {
-            throw 'firstName, lastName, and comment must be strings';
+            throw 'commenterId, firstName, lastName, and comment must be strings';
         }
 
+        commenterId = this.checkId(commenterId.trim());
         firstName = firstName.trim();
         lastName = lastName.trim();
         comment = comment.trim();
@@ -81,6 +84,7 @@ let exportedMethods = {
         }
 
         commentObject._id = new ObjectId();
+        commentObject.commenterId = new ObjectId(commenterId);
         commentObject.name = firstName + " " + lastName;
         commentObject.postTime = moment().format('MM/DD/YYYY hh:mma');
         commentObject.comment = comment;
