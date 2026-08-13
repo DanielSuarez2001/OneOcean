@@ -41,7 +41,7 @@ app.engine('handlebars', engine({ defaultLayout: 'main' }));
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'views'));
 
-//lgger Middleware (placed BEFORE routes so every request is logged)
+//logger Middleware (placed BEFORE routes so every request is logged)
 app.use(loggerMiddleware);
 
 //register all application routes
