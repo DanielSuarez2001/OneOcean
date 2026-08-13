@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
       );
     }
 
-    // Direct filter by County
+    //direct filter by County
     if (county && county.trim().length > 0) {
       const countyQuery = county.trim().toLowerCase();
       allBeaches = allBeaches.filter((b) =>
@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
       );
     }
 
-    // Direct filter by City
+    //direct filter by City
     if (city && city.trim().length > 0) {
       const cityQuery = city.trim().toLowerCase();
       allBeaches = allBeaches.filter((b) =>
@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
       );
     }
 
-    // Direct filter by Status ('Active', 'Closed', 'Unknown')
+    //direct filter by Status ('Active', 'Closed', 'Unknown')
     if (status && status.trim().length > 0) {
       const statusQuery = status.trim().toLowerCase();
       allBeaches = allBeaches.filter(
@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
       );
     }
 
-    // Filter by Length Range
+    //filter by Length Range
     if (minLength && !isNaN(+minLength)) {
       allBeaches = allBeaches.filter((b) => b.beachLength >= parseFloat(minLength));
     }
@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
       allBeaches = allBeaches.filter((b) => b.beachLength <= parseFloat(maxLength));
     }
 
-    // Render the beaches index page with our filtered list
+    //render the beaches index page with our filtered list
     return res.render('beaches/index', {
       title: 'Explore Beaches',
       beaches: allBeaches,
@@ -99,7 +99,7 @@ router.post('/:id/comments', async (req, res) => {
 
     await beachData.addBeachComment(beachId, userId, commentText);
 
-    // Refresh the single beach detail page
+    //refresh the single beach detail page
     return res.redirect(`/beaches/${beachId}`);
   } catch (e) {
     return res.status(400).render('error', { error: 'Could not post comment.' });
