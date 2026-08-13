@@ -8,57 +8,20 @@ const router = Router();
 // ==========================================
 router.get('/', async (req, res) => {
   try {
-    let allBeaches = await beachData.getAllBeaches();
+    const { search, county, city, status, waterQuality, minLength, maxLength } = req.query;
 
-    const { search, county, city, status, minLength, maxLength } = req.query;
+    const filteredBeaches = await beachData.getBeachesByFilter({
+      search,
+      county,
+      city,
+      status: status || waterQuality,
+      minLength,
+      maxLength
+    });
 
-    // Search query matching across name, county, or city
-    if (search && search.trim().length > 0) {
-      const query = search.trim().toLowerCase();
-      allBeaches = allBeaches.filter(
-        (beach) =>
-          beach.beachName.toLowerCase().includes(query) ||
-          beach.county.toLowerCase().includes(query) ||
-          beach.city.toLowerCase().includes(query)
-      );
-    }
-
-    //direct filter by County
-    if (county && county.trim().length > 0) {
-      const countyQuery = county.trim().toLowerCase();
-      allBeaches = allBeaches.filter((b) =>
-        b.county.toLowerCase().includes(countyQuery)
-      );
-    }
-
-    //direct filter by City
-    if (city && city.trim().length > 0) {
-      const cityQuery = city.trim().toLowerCase();
-      allBeaches = allBeaches.filter((b) =>
-        b.city.toLowerCase().includes(cityQuery)
-      );
-    }
-
-    //direct filter by Status ('Active', 'Closed', 'Unknown')
-    if (status && status.trim().length > 0) {
-      const statusQuery = status.trim().toLowerCase();
-      allBeaches = allBeaches.filter(
-        (b) => b.status.toLowerCase() === statusQuery
-      );
-    }
-
-    //filter by Length Range
-    if (minLength && !isNaN(+minLength)) {
-      allBeaches = allBeaches.filter((b) => b.beachLength >= parseFloat(minLength));
-    }
-    if (maxLength && !isNaN(+maxLength)) {
-      allBeaches = allBeaches.filter((b) => b.beachLength <= parseFloat(maxLength));
-    }
-
-    //render the beaches index page with our filtered list
     return res.render('beaches/index', {
       title: 'Explore Beaches',
-      beaches: allBeaches,
+      beaches: filteredBeaches,
       searchQuery: search || ''
     });
   } catch (e) {
@@ -99,7 +62,6 @@ router.post('/:id/comments', async (req, res) => {
 
     await beachData.addBeachComment(beachId, userId, commentText);
 
-    //refresh the single beach detail page
     return res.redirect(`/beaches/${beachId}`);
   } catch (e) {
     return res.status(400).render('error', { error: 'Could not post comment.' });

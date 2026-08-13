@@ -71,6 +71,42 @@ let exportedMethods = {
         return formatBeach(currentBeach);
     },
 
+    async getBeachesByFilter(filters = {}) {
+        const beachesCollection = await beaches();
+        const query = {};
+
+        if (filters.county && typeof filters.county === 'string' && filters.county.trim().length > 0) {
+            query.county = { $regex: new RegExp(filters.county.trim(), 'i') };
+        }
+
+        if (filters.city && typeof filters.city === 'string' && filters.city.trim().length > 0) {
+            query.city = { $regex: new RegExp(filters.city.trim(), 'i') };
+        }
+
+        if (filters.waterQuality && typeof filters.waterQuality === 'string' && filters.waterQuality.trim().length > 0) {
+            query.status = { $regex: new RegExp(filters.waterQuality.trim(), 'i') };
+        }
+
+        if (filters.minLength !== undefined && filters.minLength !== '' && filters.minLength !== null) {
+            const numLength = Number(filters.minLength);
+            if (!isNaN(numLength)) {
+                query.beachLength = { $gte: numLength };
+            }
+        }
+
+        if (filters.search && typeof filters.search === 'string' && filters.search.trim().length > 0) {
+            const searchRegex = new RegExp(filters.search.trim(), 'i');
+            query.$or = [
+                { beachName: searchRegex },
+                { city: searchRegex },
+                { county: searchRegex }
+            ];
+        }
+
+        let filteredBeaches = await beachesCollection.find(query).toArray();
+        return filteredBeaches.map(formatBeach);
+    },
+
     async removeBeach(id) {
         let idSanatized = generalUtils.checkId(id)
         let id_obj = new ObjectId(id);
