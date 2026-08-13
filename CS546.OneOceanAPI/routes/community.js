@@ -12,17 +12,17 @@ router.get('/', async (req, res) => {
 
     const { date, startTime, type, minAttendance } = req.query;
 
-    // Filter by Event Date (YYYY-MM-DD)
+    //filter by Event Date (YYYY-MM-DD)
     if (date && date.trim().length > 0) {
       eventsList = eventsList.filter((e) => e.eventDate === date.trim());
     }
 
-    // Filter by Start Time
+    //filter by Start Time
     if (startTime && startTime.trim().length > 0) {
       eventsList = eventsList.filter((e) => e.startTime === startTime.trim());
     }
 
-    // Filter by Event Type (e.g. Beach Cleanup, Volleyball, etc.)
+    //filter by Event Type (e.g. Beach Cleanup, Volleyball, etc.)
     if (type && type.trim().length > 0) {
       const typeQuery = type.trim().toLowerCase();
       eventsList = eventsList.filter(
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
       );
     }
 
-    // Filter by Minimum Attendance/RSVP count
+    //filter by Minimum Attendance/RSVP count
     if (minAttendance && !isNaN(+minAttendance)) {
       const minCount = parseInt(minAttendance, 10);
       eventsList = eventsList.filter(
@@ -123,7 +123,7 @@ router.patch('/:id', async (req, res) => {
     const eventId = req.params.id;
     const userId = req.session.user._id;
 
-    // Check host authorization
+    //check host authorization
     const event = await eventData.getEventById(eventId);
     if (event.hostId.toString() !== userId.toString()) {
       return res.status(403).json({ error: 'You are not authorized to update this event.' });
@@ -148,7 +148,7 @@ router.delete('/:id', async (req, res) => {
     const eventId = req.params.id;
     const userId = req.session.user._id;
 
-    // Check host authorization
+    //check host authorization
     const event = await eventData.getEventById(eventId);
     if (event.hostId.toString() !== userId.toString()) {
       return res.status(403).json({ error: 'You are not authorized to cancel this event.' });
