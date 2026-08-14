@@ -31,16 +31,17 @@ let exportedMethods = {
             upperLon: upperLonSanatized,
             lowerLon: lowerLonSanatized,
             waterQuality: null,
-            BeachComments: []
+            userRating: null,
+            BeachComments: [],
+            BeachRatings: []
         };
         
         const beachesCollection = await beaches();
         const insertInfo = await beachesCollection.insertOne(newBeach);
         if (!insertInfo.acknowledged || !insertInfo.insertedId)
         {
-            throw 'Could not add beach';
+            throw `Could not add beach ${newBeach.beachName} to database`;
         }
-
         let idStr = (insertInfo.insertedId.toString());
         let insertedBeach = Object.assign({_id:''}, newBeach);
         insertedBeach._id = idStr;
@@ -67,11 +68,11 @@ let exportedMethods = {
         let id_obj = new ObjectId(idSanatized);
         const beachesCollection = await beaches();
         const currentBeach = await beachesCollection.findOne({_id: id_obj});
-        if (currentBeach === null) throw 'No beach found with that id';
+        if (currentBeach === null) throw `No beach found with id ${id}`;
         return formatBeach(currentBeach);
     },
 
-    async getBeachesByFilter(filters = {}) {
+  async getBeachesByFilter(filters = {}) {
         const beachesCollection = await beaches();
         const query = {};
 
@@ -84,7 +85,7 @@ let exportedMethods = {
         }
 
         if (filters.waterQuality && typeof filters.waterQuality === 'string' && filters.waterQuality.trim().length > 0) {
-            query.status = { $regex: new RegExp(filters.waterQuality.trim(), 'i') };
+            query.waterQuality = { $regex: new RegExp(filters.waterQuality.trim(), 'i') };
         }
 
         if (filters.minLength !== undefined && filters.minLength !== '' && filters.minLength !== null) {
@@ -105,6 +106,18 @@ let exportedMethods = {
 
         let filteredBeaches = await beachesCollection.find(query).toArray();
         return filteredBeaches.map(formatBeach);
+    },
+
+    async getBeachComments(beachId) {
+        beachId = generalUtils.checkId(beachId);
+        let currentBeach = await this.getBeachById(beachId);
+        return currentBeach.BeachComments;
+    },
+
+    async getBeachRatings(beachId) {
+        beachId = generalUtils.checkId(beachId);
+        let currentBeach = await this.getBeachById(beachId);
+        return currentBeach.BeachRatings;
     },
 
     async removeBeach(id) {
@@ -202,22 +215,21 @@ let exportedMethods = {
         return formatBeach(patchedBeachInfo);
   },
 
-  async addBeachComment(beachId, commenterId, commentStr) {
+    async addBeachComment(beachId, commenterId, commentStr) {
         beachId = generalUtils.checkId(beachId);
         commenterId = generalUtils.checkId(commenterId);
 
         let currentBeach = await this.getBeachById(beachId);
         let currentCommenter = await users.getUserById(commenterId);
 
-        let commentObject = generalUtils.createCommentObject(currentCommenter.firstName, currentCommenter.lastName, commentStr);
+        let commentObject = generalUtils.createCommentObject(currentCommenter._id, currentCommenter.firstName, currentCommenter.lastName, commentStr);
 
         let currentBeachComments = currentBeach.BeachComments;
         currentBeachComments.push(commentObject);
         
-        
         let id_obj = new ObjectId(beachId);
         const beachCollection = await beaches();
-        const updatedBeachInfo =  await beachCollection.updateOne(
+        const updatedBeachInfo =  await beachCollection.findOneAndUpdate(
             {_id: id_obj},
             {$set: {'BeachComments': currentBeachComments}},
             {returnDocument: 'after'}
@@ -246,12 +258,109 @@ let exportedMethods = {
 
         let id_obj = new ObjectId(beachId);
         const beachCollection = await beaches();
-        const updatedBeachInfo =  await beachCollection.updateOne(
+        const updatedBeachInfo =  await beachCollection.findOneAndUpdate(
             {_id: id_obj},
             {$set: {'BeachComments': currentBeachComments}},
             {returnDocument: 'after'}
             );
         if (!updatedBeachInfo) throw `Could not remove comment: ${commentId} from beach: ${beachId}`;
+        return formatBeach(updatedBeachInfo);
+    },
+    
+    async addBeachRating(beachId, raterId, ratingStr) {
+        beachId = generalUtils.checkId(beachId);
+        raterId = generalUtils.checkId(raterId);
+
+        let currentBeach = await this.getBeachById(beachId);
+        let currentRater = await users.getUserById(raterId);
+
+        let ratingObject = beachUtils.createRatingObject(currentRater._id, currentRater.firstName, currentRater.lastName, ratingStr);
+
+        let currentBeachRatings = currentBeach.BeachRatings;
+
+        let ratingExists = currentBeachRatings.findIndex((rating) => rating.raterId.toString() === raterId);
+
+        if (ratingExists === -1)
+        {
+            currentBeachRatings.push(ratingObject);
+        }
+        else
+        {
+            throw `Rating from rater: ${raterId} already exists for beach: ${beachId}`;
+        }
+        
+        let newUserRating = (currentBeachRatings.reduce((r, {rating}) => r + rating, 0)) / currentBeachRatings.length;
+
+        let id_obj = new ObjectId(beachId);
+        const beachCollection = await beaches();
+        const updatedBeachInfo = await beachCollection.findOneAndUpdate(
+            {_id: id_obj},
+            {$set: {'userRating': newUserRating, 'BeachRatings': currentBeachRatings}},
+            {returnDocument: 'after'}
+            );
+        if (!updatedBeachInfo) throw `Could not add rating: ${ratingObject} to beach: ${beachId}`;
+        return formatBeach(updatedBeachInfo);
+    },
+
+    async removeBeachRating(beachId, raterId) {
+        beachId = generalUtils.checkId(beachId);
+        raterId = generalUtils.checkId(raterId);
+
+        let currentBeach = await this.getBeachById(beachId);
+
+        let currentBeachRatings = currentBeach.BeachRatings;
+        let targetRatingIndex = currentBeachRatings.findIndex((rating) => rating.raterId.toString() === raterId);
+
+        if (targetRatingIndex === -1)
+        {
+            throw `Could not find rating from rater: ${raterId} for beach: ${beachId}`;
+        }
+        else
+        {
+            currentBeachRatings.splice(targetRatingIndex, 1);
+        }
+
+        let newUserRating = (currentBeachRatings.reduce((r, {rating}) => r + rating, 0)) / currentBeachRatings.length;
+
+        let id_obj = new ObjectId(beachId);
+        const beachCollection = await beaches();
+        const updatedBeachInfo = await beachCollection.findOneAndUpdate(
+            {_id: id_obj},
+            {$set: {'userRating': newUserRating, 'BeachRatings': currentBeachRatings}},
+            {returnDocument: 'after'}
+            );
+        if (!updatedBeachInfo) throw `Could not remove rating from rater: ${raterId} for beach: ${beachId}`;
+        return formatBeach(updatedBeachInfo);
+    },
+    
+    async patchBeachRating(beachId, raterId, ratingStr) {
+        beachId = generalUtils.checkId(beachId);
+        raterId = generalUtils.checkId(raterId);
+
+        let currentBeach = await this.getBeachById(beachId);
+
+        let currentBeachRatings = currentBeach.BeachRatings;
+        let targetRatingIndex = currentBeachRatings.findIndex((rating) => rating.raterId.toString() === raterId);
+        if (targetRatingIndex === -1)
+        {
+            throw `Could not find rating from rater: ${raterId} for beach: ${beachId}`;
+        }
+        else
+        {
+            let newRating = beachUtils.validateRating(ratingStr);
+            currentBeachRatings[targetRatingIndex].rating = newRating;
+        }
+
+        let newUserRating = (currentBeachRatings.reduce((r, {rating}) => r + rating, 0)) / currentBeachRatings.length;
+
+        let id_obj = new ObjectId(beachId);
+        const beachCollection = await beaches();
+        const updatedBeachInfo = await beachCollection.findOneAndUpdate(
+            {_id: id_obj},
+            {$set: {'userRating': newUserRating, 'BeachRatings': currentBeachRatings}},
+            {returnDocument: 'after'}
+            );
+        if (!updatedBeachInfo) throw `Could not update rating from rater: ${raterId} for beach: ${beachId}`;
         return formatBeach(updatedBeachInfo);
     }
 }
