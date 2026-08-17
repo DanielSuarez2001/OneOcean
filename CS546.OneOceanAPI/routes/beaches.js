@@ -10,52 +10,85 @@ router.get('/', async (req, res) => {
   try {
     let allBeaches = await beachData.getAllBeaches();
 
-    const { search, county, city, status, minLength, maxLength } = req.query;
+    const { 
+      search, 
+      county, 
+      city, 
+      status, 
+      minLength, 
+      maxLength,
+      waterQuality,
+      minUserRating,
+      maxUserRating,
+      minAutoRating,
+      maxAutoRating,
+      minSize,
+      maxSize
+    } = req.query;
 
-    // Search query matching across name, county, or city
     if (search && search.trim().length > 0) {
       const query = search.trim().toLowerCase();
       allBeaches = allBeaches.filter(
         (beach) =>
-          beach.beachName.toLowerCase().includes(query) ||
-          beach.county.toLowerCase().includes(query) ||
-          beach.city.toLowerCase().includes(query)
+          (beach.beachName && beach.beachName.toLowerCase().includes(query)) ||
+          (beach.county && beach.county.toLowerCase().includes(query)) ||
+          (beach.city && beach.city.toLowerCase().includes(query))
       );
     }
 
-    //direct filter by County
     if (county && county.trim().length > 0) {
       const countyQuery = county.trim().toLowerCase();
       allBeaches = allBeaches.filter((b) =>
-        b.county.toLowerCase().includes(countyQuery)
+        b.county && b.county.toLowerCase().includes(countyQuery)
       );
     }
 
-    //direct filter by City
     if (city && city.trim().length > 0) {
       const cityQuery = city.trim().toLowerCase();
       allBeaches = allBeaches.filter((b) =>
-        b.city.toLowerCase().includes(cityQuery)
+        b.city && b.city.toLowerCase().includes(cityQuery)
       );
     }
 
-    //direct filter by Status ('Active', 'Closed', 'Unknown')
     if (status && status.trim().length > 0) {
       const statusQuery = status.trim().toLowerCase();
       allBeaches = allBeaches.filter(
-        (b) => b.status.toLowerCase() === statusQuery
+        (b) => b.status && b.status.toLowerCase() === statusQuery
       );
     }
 
-    //filter by Length Range
-    if (minLength && !isNaN(+minLength)) {
-      allBeaches = allBeaches.filter((b) => b.beachLength >= parseFloat(minLength));
-    }
-    if (maxLength && !isNaN(+maxLength)) {
-      allBeaches = allBeaches.filter((b) => b.beachLength <= parseFloat(maxLength));
+    if (waterQuality && waterQuality.trim().length > 0) {
+      const wqQuery = waterQuality.trim().toLowerCase();
+      allBeaches = allBeaches.filter((b) => 
+        b.waterQuality !== null && b.waterQuality !== undefined &&
+        b.waterQuality.toString().toLowerCase() === wqQuery
+      );
     }
 
-    //render the beaches index page with our filtered list
+    const effectiveMinLength = minLength || minSize;
+    if (effectiveMinLength && !isNaN(+effectiveMinLength)) {
+      allBeaches = allBeaches.filter((b) => b.beachLength >= parseFloat(effectiveMinLength));
+    }
+
+    const effectiveMaxLength = maxLength || maxSize;
+    if (effectiveMaxLength && !isNaN(+effectiveMaxLength)) {
+      allBeaches = allBeaches.filter((b) => b.beachLength <= parseFloat(effectiveMaxLength));
+    }
+
+    if (minUserRating && !isNaN(+minUserRating)) {
+      allBeaches = allBeaches.filter((b) => b.userRating !== null && b.userRating !== undefined && b.userRating >= parseFloat(minUserRating));
+    }
+    if (maxUserRating && !isNaN(+maxUserRating)) {
+      allBeaches = allBeaches.filter((b) => b.userRating !== null && b.userRating !== undefined && b.userRating <= parseFloat(maxUserRating));
+    }
+
+    if (minAutoRating && !isNaN(+minAutoRating)) {
+      allBeaches = allBeaches.filter((b) => b.autoRating !== null && b.autoRating !== undefined && b.autoRating >= parseFloat(minAutoRating));
+    }
+    if (maxAutoRating && !isNaN(+maxAutoRating)) {
+      allBeaches = allBeaches.filter((b) => b.autoRating !== null && b.autoRating !== undefined && b.autoRating <= parseFloat(maxAutoRating));
+    }
+
     return res.render('beaches/index', {
       title: 'Explore Beaches',
       beaches: allBeaches,
@@ -103,7 +136,6 @@ router.get('/:id', async (req, res) => {
 // 3. POST /beaches/:id/comments (Add Comment)
 // ==========================================
 router.post('/:id/comments', async (req, res) => {
-  // Must be logged in to leave a comment
   if (!req.session || !req.session.user) {
     return res.redirect('/login');
   }
@@ -114,8 +146,6 @@ router.post('/:id/comments', async (req, res) => {
     const commentText = req.body.comment;
 
     await beachData.addBeachComment(beachId, userId, commentText);
-
-    //refresh the single beach detail page
     return res.redirect(`/beaches/${beachId}`);
   } catch (e) {
     return res.status(400).render('error', { error: 'Could not post comment.' });
