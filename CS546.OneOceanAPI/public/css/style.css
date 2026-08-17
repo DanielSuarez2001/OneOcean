@@ -116,3 +116,9 @@ a {
   font-size: 14px;
   text-align: center;
 }
+
+/* Map / layout */
+
+#map {
+  height: 500px;
+}

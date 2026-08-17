@@ -67,6 +67,22 @@ router.get('/', async (req, res) => {
 });
 
 // ==========================================
+// 2. GET /beaches/map (Get Mapped Beaches Page)
+// ==========================================
+router.get('/map', async (req, res) => {
+  try {
+    let allBeaches = await beachData.getAllBeaches();
+
+    return res.render('beaches/map', {
+      title: 'View Beaches',
+      beaches: JSON.stringify(allBeaches)
+    });
+  } catch (e) {
+    return res.status(404).json(e);
+  }
+});
+
+// ==========================================
 // 2. GET /beaches/:id (Get Single Beach Page)
 // ==========================================
 router.get('/:id', async (req, res) => {

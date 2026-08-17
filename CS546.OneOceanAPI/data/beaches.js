@@ -1,4 +1,5 @@
 import generalUtils from '../utils/general_utils.js'
+import geoUtils from '../utils/geo_utils.js'
 import beachUtils from '../utils/beach_utils.js'
 import users from './users.js'
 import {beaches} from '../config/MongoCollections.js'
@@ -9,15 +10,13 @@ const formatBeach = (beach) => ({ ...beach, _id: beach._id.toString() });
 let exportedMethods = {
     async createBeach(beachId, beachName, city, county, status, beachLength, upperLat, lowerLat, upperLon, lowerLon) {
         let beachIdSanatized = generalUtils.validateDatasetId(beachId);
+         let beachLengthSanatized = beachUtils.validateBeachLength(beachLength);
         let beachNameSanatized = beachUtils.validateBeachName(beachName);
         let citySanatized = beachUtils.validateBeachCity(city);
         let countySanatized = beachUtils.validateBeachCounty(county);
+        let geoObjectSanatized = beachUtils.createGeoObject(upperLon, lowerLon, upperLat, lowerLat);
         let statusSanatized = beachUtils.validateBeachStatus(status);
-        let beachLengthSanatized = beachUtils.validateBeachLength(beachLength);
-        let upperLatSanatized = beachUtils.validateCoords(upperLat, 'upperLat');
-        let lowerLatSanatized = beachUtils.validateCoords(lowerLat, 'lowerLat');
-        let upperLonSanatized = beachUtils.validateCoords(upperLon, 'upperLon');
-        let lowerLonSanatized = beachUtils.validateCoords(lowerLon, 'lowerLon');
+       
 
         let newBeach = {
             beachId: beachIdSanatized,
@@ -25,11 +24,8 @@ let exportedMethods = {
             beachName: beachNameSanatized,
             city: citySanatized,
             county: countySanatized,
-            upperLat: upperLatSanatized,
-            lowerLat: lowerLatSanatized,
+            geoObject: geoObjectSanatized,
             status: statusSanatized,
-            upperLon: upperLonSanatized,
-            lowerLon: lowerLonSanatized,
             waterQuality: null,
             userRating: null,
             BeachComments: [],

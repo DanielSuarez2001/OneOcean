@@ -4,17 +4,21 @@ export const beachesValidator = {
     required: [
       '_id',
       'beachId',
-      'name',
-      'location',
+      'beachName',
+      'city',
+      'county',
       'status',
       'beachLength',
       'waterQuality',
-      'advisories',
-      'comments',
+      'userRating',
+      //'advisories',
+      'BeachComments',
+      'BeachRatings',
       'upperLat',
       'lowerLat',
       'upperLon',
-      'lowerLon'
+      'lowerLon',
+      'geoObject'
     ],
     additionalProperties: false,
     properties: {
@@ -27,8 +31,9 @@ export const beachesValidator = {
         minLength: 1,
         description: 'Unique beach identifier from the CA beach water quality dataset.'
       },
-      name: { bsonType: 'string', minLength: 1, maxLength: 100 },
-      location: { bsonType: 'string', minLength: 1, maxLength: 200 },
+      beachName: { bsonType: 'string', minLength: 1, maxLength: 100 },
+      city: { bsonType: 'string', minLength: 1, maxLength: 100 },
+      county: { bsonType: 'string', minLength: 1, maxLength: 100 },
       status: {
         enum: ['Active', 'Inactive'],
         description: 'Matches the CA beach water quality dataset\'s own Active/Inactive status.'
@@ -44,11 +49,17 @@ export const beachesValidator = {
         maximum: 10,
         description: 'A 1-10 safety score, or null until computed from bacteria monitoring results.'
       },
-      advisories: {
-        bsonType: 'array',
-        items: { bsonType: 'string' }
+      userRating: {
+        bsonType: ['int', 'long', 'double', 'decimal', 'null'],
+        minimum: 1,
+        maximum: 10,
+        description: 'A 1-10 averaged user rating score, or null until the first user review is entered'
       },
-      comments: {
+      // advisories: {
+      //   bsonType: 'array',
+      //   items: { bsonType: 'string' }
+      // },
+      BeachComments: {
         bsonType: 'array',
         items: {
           bsonType: 'object',
@@ -61,10 +72,36 @@ export const beachesValidator = {
           }
         }
       },
+      BeachRatings: {
+        bsonType: 'array',
+        items: {
+          bsonType: 'object',
+          required: ['_id', 'raterId', 'name', 'rating'],
+          additionalProperties: false,
+          properties: {
+            _id: { bsonType: 'objectId'},
+            raterId: { bsonType: 'objectId'},
+            name: { bsonType: 'string', minLength: 1, maxLength: 100 },
+            rating: { bsonType: ['int', 'long', 'double', 'decimal'] }
+          }
+        }
+      },
       upperLat: { bsonType: ['int', 'long', 'double', 'decimal'], minimum: -90, maximum: 90 },
       lowerLat: { bsonType: ['int', 'long', 'double', 'decimal'], minimum: -90, maximum: 90 },
       upperLon: { bsonType: ['int', 'long', 'double', 'decimal'], minimum: -180, maximum: 180 },
-      lowerLon: { bsonType: ['int', 'long', 'double', 'decimal'], minimum: -180, maximum: 180 }
+      lowerLon: { bsonType: ['int', 'long', 'double', 'decimal'], minimum: -180, maximum: 180 },
+      geoObject: {
+          bsonType: 'object',
+          required: ['type', 'coordinates'],
+          additionalProperties: false,
+          properties: {
+            type: { bsonType: 'string', minLength: 1, maxLength: 10},
+            coordinates: {
+              bsonType: 'array', 
+              items: {bsonType: ['int', 'long', 'double', 'decimal', 'null']}
+            }
+          }   
+      }
     }
   }
 };

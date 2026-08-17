@@ -1,3 +1,4 @@
+import geojson from 'geojson'
 import {ObjectId} from 'mongodb';
 
 let exportedMethods = {
@@ -51,33 +52,6 @@ let exportedMethods = {
             throw 'beachLength must be a number greater than 0';
         }
         return beachLengthSanatized;
-    },
-     validateCoords(coordinate, fieldName) {
-        let coordinateSanatized;
-        if (!coordinate)
-        {
-            throw `${fieldName} must be provided`;
-        }
-        if (typeof coordinate !== 'number')
-        {
-            if (typeof coordinate === 'string')
-            {
-                coordinateSanatized = +(coordinate.trim());
-                if (Number.isNaN(coordinateSanatized))
-                {
-                    throw `if ${fieldName} is a string it must be in number form`;
-                }
-            }
-            else
-            {
-                throw `${fieldName} must be a number or string in number form`;
-            }
-        }
-        else 
-        {
-            coordinateSanatized = coordinate;
-        }
-        return coordinateSanatized;
     },
     validateBeachCity(beachCity) {
         if (!beachCity || typeof beachCity !== 'string')
@@ -167,7 +141,7 @@ let exportedMethods = {
             raterId: null,
             name: null,
             rating: null
-        }
+        };
 
         if (!raterId || !firstName || !lastName || !ratingStr)
         {
@@ -195,6 +169,53 @@ let exportedMethods = {
 
         return ratingObject
     },
+    validateCoords(coordinate, fieldName) {
+        let coordinateSanatized;
+        if (!coordinate)
+        {
+            throw `${fieldName} must be provided`;
+        }
+        if (typeof coordinate !== 'number')
+        {
+            if (typeof coordinate === 'string')
+            {
+                coordinateSanatized = +(coordinate.trim());
+                if (Number.isNaN(coordinateSanatized))
+                {
+                    throw `if ${fieldName} is a string it must be in number form`;
+                }
+            }
+            else
+            {
+                throw `${fieldName} must be a number or string in number form`;
+            }
+        }
+        else 
+        {
+            coordinateSanatized = coordinate;
+        }
+        return coordinateSanatized;
+    },
+    createGeoObject(upperLon, lowerLon, upperLat, lowerLat) {
+        let geoObject =
+        {
+            type: "Point",
+            coordinates: null
+        };
+
+        let upperLonSanatized = this.validateCoords(upperLon, 'upperLon');
+        let lowerLonSanatized = this.validateCoords(lowerLon, 'lowerLon');
+        let upperLatSanatized = this.validateCoords(upperLat, 'upperLat');
+        let lowerLatSanatized = this.validateCoords(lowerLat, 'lowerLat');
+
+        let avgLon = (upperLonSanatized + lowerLonSanatized) / 2;
+        let avgLat = (upperLatSanatized + lowerLatSanatized) / 2;   
+        
+        let beachGeoPoint = [avgLon, avgLat];
+        geoObject.coordinates = beachGeoPoint;
+
+        return geoObject;
+    }
 };
 
 export default exportedMethods;

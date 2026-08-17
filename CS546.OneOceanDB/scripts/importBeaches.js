@@ -37,15 +37,25 @@ const numberOrFallback = (value, fallbackValue) => (value ? Number(value) : Numb
 
 const toBeachDocument = (row, advisoriesByBeachId) => ({
   beachId: row.BeachName_id,
-  name: row.Beach_Name.trim(),
-  location: `${row.NearestCityName}, ${row.County}`,
+  beachName: row.Beach_Name.trim(),
+  city: row.NearestCityName.trim(),
+  county: row.County.trim(),
   status: row.Status === 'Active' ? 'Active' : 'Inactive',
   beachLength: Number(row['Beach Length']) || 0,
-  advisories: [...(advisoriesByBeachId.get(row.BeachName_id) || [])],
+  //advisories: [...(advisoriesByBeachId.get(row.BeachName_id) || [])],
   upperLat: numberOrFallback(row.Beach_UpperLat, row.Beach_LowerLat),
   lowerLat: numberOrFallback(row.Beach_LowerLat, row.Beach_UpperLat),
   upperLon: numberOrFallback(row['Beach_ UpperLon'], row.Beach_LowerLon),
-  lowerLon: numberOrFallback(row.Beach_LowerLon, row['Beach_ UpperLon'])
+  lowerLon: numberOrFallback(row.Beach_LowerLon, row['Beach_ UpperLon']),
+  geoObject: 
+  {
+    type: "Point",
+    coordinates: 
+    [
+      (numberOrFallback(row['Beach_ UpperLon'], row.Beach_LowerLon) + numberOrFallback(row.Beach_LowerLon, row['Beach_ UpperLon']))/2,
+      (numberOrFallback(row.Beach_UpperLat, row.Beach_LowerLat) + numberOrFallback(row.Beach_LowerLat, row.Beach_UpperLat))/2
+    ]
+  }
 });
 
 const client = new MongoClient(mongoUri);
@@ -82,7 +92,7 @@ try {
       filter: { beachId: doc.beachId },
       update: {
         $set: doc,
-        $setOnInsert: { waterQuality: null, comments: [] }
+        $setOnInsert: { waterQuality: null, userRating: null, BeachComments: [], BeachRatings: [] }
       },
       upsert: true
     }
