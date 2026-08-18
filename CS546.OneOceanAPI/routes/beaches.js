@@ -89,7 +89,7 @@ router.get('/', async (req, res) => {
       allBeaches = allBeaches.filter((b) => b.autoRating !== null && b.autoRating !== undefined && b.autoRating <= parseFloat(maxAutoRating));
     }
 
-    return res.render('beaches/index', {
+    return res.render('beaches/search', {
       title: 'Explore Beaches',
       beaches: allBeaches,
       searchQuery: search || ''

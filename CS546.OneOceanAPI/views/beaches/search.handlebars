@@ -1,1 +1,102 @@
 <h1>{{title}}</h1>
+
+<div class="filter-bar">
+  <form class="filter-field" action="/beaches" method="GET">
+    <label for="search">Name:</label>
+    <input type="text" id="name" name="name" value="{{searchQuery}}" placeholder="Search by name">
+
+    <label for="county">County:</label>
+    <input type="text" id="county" name="county" placeholder="Search by county">
+
+    <label for="city">City:</label>
+    <input type="text" id="city" name="city" placeholder="Search by city">
+  </form>
+</div>
+<div class="filter-bar">
+  <form class="filter-field" action="/beaches" method="GET">
+    <label for="waterQuality">Water Quality:</label>
+    <select type="number" id="waterQuality" name="waterQuality" min="0" max="10" step="1" placeholder="10">
+        <option value="">Any</option>
+        <option value="10">10</option>
+        <option value="9">9</option>
+        <option value="8">8</option>
+        <option value="7">7</option>
+        <option value="6">6</option>
+        <option value="5">5</option>
+        <option value="4">4</option>
+        <option value="3">3</option>
+        <option value="2">2</option>
+        <option value="1">1</option>
+    </select>
+
+    <label for="minLength">Min Length (Miles):</label>
+    <select id="minLength" name="minLength">
+      <option value="">Any</option>
+      <option value="<1"><1</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+    </select>
+
+    <label for="maxLength">Max Length (Miles):</label>
+    <select id="maxLength" name="maxLength">
+      <option value="">Any</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </select>
+
+    <label for="minUserRating">Min User Rating:</label>
+    <select type="number" id="minUserRating" name="minUserRating" placeholder ="5">
+      <option value="">Any</option>
+      <option value="0">0</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+
+    <button type="submit">Apply Filters</button>
+  </form>
+</div>
+
+<div class="search-results">
+  <header>
+    {{#if searchQuery}}
+      <h2>Search Results for "{{searchQuery}}"</h2>
+    {{else}}
+      <h2>All Beaches</h2>
+    {{/if}}
+  </header>
+
+  <a href="/" class="home-link">Return to Home Page</a>
+
+  {{#if beaches.length}}
+    <ol>
+      {{#each beaches}}
+        <li>
+          <p class="searchResult">{{this.beachName}}</p>
+          <a href="/beaches/{{this._id}}">
+            {{#if this.strBeachThumb}}
+              <img class="searchResultImage" alt="{{this.beachName}}" src="{{this.strBeachThumb}}">
+            {{else}}
+              <img class="searchResultImage" alt="No Image Available" src="/public/images/no_image.jpeg">
+            {{/if}}
+          </a>
+
+          <div class="beach-city">City: {{this.city}}</div>
+          <div class="beach-county">County: {{this.county}}</div>
+          <div class="beach-status">Status: {{this.status}}</div>
+          <div class="beach-length">Beach Length: {{this.beachLength}}</div>
+          <div class="water-quality quality-{{this.waterQuality}}">
+            Water Quality: {{#if this.waterQuality}}{{this.waterQuality}}{{else}}Not rated{{/if}}
+          </div>
+          <div class="user-rating">User Rating: {{#if this.userRating}}{{this.userRating}}{{else}}N/A{{/if}}</div>
+          <div class="auto-rating">Auto Rating: {{#if this.autoRating}}{{this.autoRating}}{{else}}N/A{{/if}}</div>
+        </li>
+      {{/each}}
+    </ol>
+  {{else}}
+    <p>No beaches matched your search.</p>
+  {{/if}}
+</div>
