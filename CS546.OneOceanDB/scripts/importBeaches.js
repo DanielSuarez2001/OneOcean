@@ -42,11 +42,6 @@ const toBeachDocument = (row, advisoriesByBeachId) => ({
   county: row.County.trim(),
   status: row.Status === 'Active' ? 'Active' : 'Inactive',
   beachLength: Number(row['Beach Length']) || 0,
-  //advisories: [...(advisoriesByBeachId.get(row.BeachName_id) || [])],
-  upperLat: numberOrFallback(row.Beach_UpperLat, row.Beach_LowerLat),
-  lowerLat: numberOrFallback(row.Beach_LowerLat, row.Beach_UpperLat),
-  upperLon: numberOrFallback(row['Beach_ UpperLon'], row.Beach_LowerLon),
-  lowerLon: numberOrFallback(row.Beach_LowerLon, row['Beach_ UpperLon']),
   geoObject: 
   {
     type: "Point",
@@ -85,6 +80,7 @@ try {
     const options = { name: index.name, unique: index.unique };
     if (index.collation) options.collation = index.collation;
     await beaches.createIndex(index.key, options);
+    await beaches.createIndex({geoObject: "2dsphere"});
   }
 
   const bulkOps = beachDocuments.map((doc) => ({

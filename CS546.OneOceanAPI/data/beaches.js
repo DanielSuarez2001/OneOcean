@@ -1,5 +1,4 @@
 import generalUtils from '../utils/general_utils.js'
-import geoUtils from '../utils/geo_utils.js'
 import beachUtils from '../utils/beach_utils.js'
 import users from './users.js'
 import {beaches} from '../config/MongoCollections.js'
@@ -14,7 +13,7 @@ let exportedMethods = {
         let beachNameSanatized = beachUtils.validateBeachName(beachName);
         let citySanatized = beachUtils.validateBeachCity(city);
         let countySanatized = beachUtils.validateBeachCounty(county);
-        let geoObjectSanatized = beachUtils.createGeoObject(upperLon, lowerLon, upperLat, lowerLat);
+        let geoObjectSanatized = beachUtils.createGeoObject(upperLon, upperLat, lowerLon, lowerLat);
         let statusSanatized = beachUtils.validateBeachStatus(status);
        
 
@@ -68,6 +67,19 @@ let exportedMethods = {
         return formatBeach(currentBeach);
     },
 
+    async getBeachesByDistance(centerLon, centerLat, proximityDistance) {
+        let distanceQuery = {
+            $nearSphere: {
+                $geometry: beachUtils.createGeoObject(centerLon, centerLat),
+                $minDistance: 0,
+                $maxDistance: beachUtils.validateDistance(proximityDistance)
+            }
+        };
+        const beachesCollection = await beaches();
+        const currentBeaches = await beachesCollection.find({geoObject: distanceQuery}).toArray();
+        return currentBeaches.map(formatBeach);
+    },
+
   async getBeachesByFilter(filters = {}) {
         const beachesCollection = await beaches();
         const query = {};
@@ -98,6 +110,22 @@ let exportedMethods = {
                 { city: searchRegex },
                 { county: searchRegex }
             ];
+        }
+
+        if (filters.proximity && typeof filters.proximity === 'object') {   
+            query.geoObject = {
+                $nearSphere: {
+                    $geometry: {
+                        type : "Point",
+                        coordinates: [
+                            beachUtils.validateCoords(filters.proximity.longitude, 'proximityLongitude'), 
+                            beachUtils.validateCoords(filters.proximity.latitude, 'proximityLatitude')
+                        ]
+                    },
+                    $minDistance: 0,
+                    $maxDistance: beachUtils.validateDistance(filters.proximity.distance)
+                }
+            };
         }
 
         let filteredBeaches = await beachesCollection.find(query).toArray();

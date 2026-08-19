@@ -5,5 +5,62 @@
 
 <div id="map"></div>
 
+<form id="beach-filters" class="filter-bar" method="GET" action="/beaches/map">
+     <div class="filter-field">
+          <label for="filter-distance" id="distance-label">Distance (miles)</label>
+          {{#if filters.proximityCenter}}
+               <input type="range" id="filter-distance-radius" name="proximityDistance" min="0" max="100" step=".5" value="{{filters.proximityDistance}}" />
+          {{else}}
+               <input type="range" id="filter-distance-radius" name="proximityDistance" min="0" max="100" step=".5" value="0" />
+          {{/if}}
+               <input type="hidden" id="filter-distance-center" name="proximityCenter" value="{{filters.proximityCenter}}" />
+     </div>
+
+     <div class="filter-field">
+          <label for="filter-city">City</label>
+          <input type="text" id="filter-city" name="city" value="{{filters.city}}" />
+     </div>
+
+     <div class="filter-field">
+          <label for="filter-county">County</label>
+          <input type="text" id="filter-county" name="county" value="{{filters.county}}" />
+     </div>
+
+     <div class="filter-field filter-field-narrow">
+          <label for="filter-minLength">Min. Length (miles)</label>
+          <input type="number" id="filter-minLength" name="minLength" value="{{filters.minLength}}" min="0" />
+     </div>
+
+     <div class="filter-field filter-field-narrow">
+          <label for="filter-maxLength">Max Length (miles)</label>
+          <input type="number" id="filter-maxLength" name="maxLength" value="{{filters.maxLength}}" min="0" />
+     </div>
+
+     <div class="filter-field filter-field-narrow">
+          <label for="filter-minUserRating">Min. User Rating</label>
+          <input type="number" id="filter-minUserRating" name="minUserRating" value="{{filters.minUserRating}}" min="0" max="5" />
+     </div>
+
+     <div class="filter-field filter-field-narrow">
+          <label for="filter-maxUserRating">Max User Rating</label>
+          <input type="number" id="filter-maxUserRating" name="maxUserRating" value="{{filters.maxUserRating}}" min="0" max="5" />
+     </div>
+
+     <div class="filter-field">
+          <label for="filter-status">Status</label>
+          <select id="filter-status" name="status" data-selected="{{filters.status}}">
+               <option value="">All</option>
+               <option value="Active">Active</option>
+               <option value="Inactive">Inactive</option>
+          </select>
+     </div>
+
+  <div class="filter-actions">
+    <button class="btn-solid" type="submit">Apply</button>
+    <a class="filter-clear" href="/beaches/map">Clear</a>
+  </div>
+</form>
+
 <script id="beach-data" type="application/json">{{{beaches}}}</script>
-<script type="module" src="/js/leaflet.js"></script>
+<script type="module" src="/js/beaches-map.js"></script>
+

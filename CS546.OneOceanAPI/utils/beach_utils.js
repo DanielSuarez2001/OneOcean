@@ -127,9 +127,9 @@ let exportedMethods = {
         {
             ratingSanatized = rating;
         }
-        if (ratingSanatized <= 0 || ratingSanatized > 5)
+        if (ratingSanatized <= 0 || ratingSanatized >= 5)
         {
-            throw 'rating must be a number between 1 and 5';
+            throw 'rating must be a number greater than 0 and less than or equal to 5';
         }
         return ratingSanatized;
     },
@@ -169,6 +169,37 @@ let exportedMethods = {
 
         return ratingObject
     },
+    validateDistance(distance) {
+        let distanceSanatized;
+        if (!distance)
+        {
+            throw `distance must be provided`;
+        }
+        if (typeof distance !== 'number')
+        {
+            if (typeof distance === 'string')
+            {
+                distanceSanatized = +(distance.trim());
+                if (Number.isNaN(distanceSanatized))
+                {
+                    throw `if distance is a string it must be in number form`;
+                }
+            }
+            else
+            {
+                throw `distance must be a number or string in number form`;
+            }
+        }
+        else 
+        {
+            distanceSanatized = distance;
+        }
+        if (distanceSanatized <= 0)
+        {
+            throw 'distance must be a number greater than 0';
+        }
+        return distanceSanatized;
+    },
     validateCoords(coordinate, fieldName) {
         let coordinateSanatized;
         if (!coordinate)
@@ -196,24 +227,33 @@ let exportedMethods = {
         }
         return coordinateSanatized;
     },
-    createGeoObject(upperLon, lowerLon, upperLat, lowerLat) {
+    createGeoObject(upperLon, upperLat, lowerLon, lowerLat) {
+        let avgLon;
+        let avgLat;
+        if (upperLon && upperLat && lowerLon && lowerLat)
+        {
+            let upperLonSanatized = this.validateCoords(upperLon, 'geoUpperLon');
+            let lowerLonSanatized = this.validateCoords(lowerLon, 'geoLowerLon');
+            let upperLatSanatized = this.validateCoords(upperLat, 'geoUpperLat');
+            let lowerLatSanatized = this.validateCoords(lowerLat, 'geoLowerLat');
+
+            avgLon = (upperLonSanatized + lowerLonSanatized) / 2;
+            avgLat = (upperLatSanatized + lowerLatSanatized) / 2;   
+        }
+        else if (upperLon && upperLat)
+        {
+            avgLon = this.validateCoords(upperLon, 'geoLon');
+            avgLat = this.validateCoords(upperLat, 'geoLat');
+        }
+        else
+        {
+            throw 'atleast one set of longitude and latitude values must be provided';
+        }
         let geoObject =
         {
             type: "Point",
-            coordinates: null
+            coordinates: [avgLon, avgLat]
         };
-
-        let upperLonSanatized = this.validateCoords(upperLon, 'upperLon');
-        let lowerLonSanatized = this.validateCoords(lowerLon, 'lowerLon');
-        let upperLatSanatized = this.validateCoords(upperLat, 'upperLat');
-        let lowerLatSanatized = this.validateCoords(lowerLat, 'lowerLat');
-
-        let avgLon = (upperLonSanatized + lowerLonSanatized) / 2;
-        let avgLat = (upperLatSanatized + lowerLatSanatized) / 2;   
-        
-        let beachGeoPoint = [avgLon, avgLat];
-        geoObject.coordinates = beachGeoPoint;
-
         return geoObject;
     }
 };

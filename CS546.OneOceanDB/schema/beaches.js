@@ -11,13 +11,8 @@ export const beachesValidator = {
       'beachLength',
       'waterQuality',
       'userRating',
-      //'advisories',
       'BeachComments',
       'BeachRatings',
-      'upperLat',
-      'lowerLat',
-      'upperLon',
-      'lowerLon',
       'geoObject'
     ],
     additionalProperties: false,
@@ -52,13 +47,9 @@ export const beachesValidator = {
       userRating: {
         bsonType: ['int', 'long', 'double', 'decimal', 'null'],
         minimum: 1,
-        maximum: 10,
-        description: 'A 1-10 averaged user rating score, or null until the first user review is entered'
+        maximum: 5,
+        description: 'A 1-5 averaged user rating score, or null until the first user review is entered'
       },
-      // advisories: {
-      //   bsonType: 'array',
-      //   items: { bsonType: 'string' }
-      // },
       BeachComments: {
         bsonType: 'array',
         items: {
@@ -86,10 +77,6 @@ export const beachesValidator = {
           }
         }
       },
-      upperLat: { bsonType: ['int', 'long', 'double', 'decimal'], minimum: -90, maximum: 90 },
-      lowerLat: { bsonType: ['int', 'long', 'double', 'decimal'], minimum: -90, maximum: 90 },
-      upperLon: { bsonType: ['int', 'long', 'double', 'decimal'], minimum: -180, maximum: 180 },
-      lowerLon: { bsonType: ['int', 'long', 'double', 'decimal'], minimum: -180, maximum: 180 },
       geoObject: {
           bsonType: 'object',
           required: ['type', 'coordinates'],
