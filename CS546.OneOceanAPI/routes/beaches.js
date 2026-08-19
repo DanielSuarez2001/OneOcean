@@ -12,6 +12,7 @@ router.get('/', async (req, res) => {
 
     const { 
       search, 
+      name,
       county, 
       city, 
       status, 
@@ -33,6 +34,13 @@ router.get('/', async (req, res) => {
           (beach.beachName && beach.beachName.toLowerCase().includes(query)) ||
           (beach.county && beach.county.toLowerCase().includes(query)) ||
           (beach.city && beach.city.toLowerCase().includes(query))
+      );
+    }
+    
+    if (name && name.trim().length > 0) {
+      const nameQuery = name.trim().toLowerCase();
+      allBeaches = allBeaches.filter((b) =>
+        b.beachName && b.beachName.toLowerCase().includes(nameQuery)
       );
     }
 
@@ -89,10 +97,10 @@ router.get('/', async (req, res) => {
       allBeaches = allBeaches.filter((b) => b.autoRating !== null && b.autoRating !== undefined && b.autoRating <= parseFloat(maxAutoRating));
     }
 
-    return res.render('beaches/index', {
+    return res.render('beaches/search', {
       title: 'Explore Beaches',
       beaches: allBeaches,
-      searchQuery: search || ''
+      searchQuery: search || name || ''
     });
   } catch (e) {
     return res.status(500).render('error', { error: 'Could not fetch beaches.' });
