@@ -72,12 +72,25 @@ let exportedMethods = {
         const beachesCollection = await beaches();
         const query = {};
 
+        if (filters.search && typeof filters.search === 'string' && filters.search.trim().length > 0) {
+            const searchRegex = new RegExp(filters.search.trim(), 'i');
+            query.$or = [
+                { beachName: searchRegex },
+                { city: searchRegex },
+                { county: searchRegex }
+            ];
+        }
+
         if (filters.county && typeof filters.county === 'string' && filters.county.trim().length > 0) {
             query.county = { $regex: new RegExp(filters.county.trim(), 'i') };
         }
 
         if (filters.city && typeof filters.city === 'string' && filters.city.trim().length > 0) {
             query.city = { $regex: new RegExp(filters.city.trim(), 'i') };
+        }
+
+        if (filters.status && typeof filters.status === 'string' && filters.status.trim().length > 0) {
+            query.status = filters.status.trim();
         }
 
         if (filters.waterQuality && typeof filters.waterQuality === 'string' && filters.waterQuality.trim().length > 0) {
@@ -91,13 +104,27 @@ let exportedMethods = {
             }
         }
 
-        if (filters.search && typeof filters.search === 'string' && filters.search.trim().length > 0) {
-            const searchRegex = new RegExp(filters.search.trim(), 'i');
-            query.$or = [
-                { beachName: searchRegex },
-                { city: searchRegex },
-                { county: searchRegex }
-            ];
+        if (filters.maxLength !== undefined && filters.maxLength !== '' && filters.maxLength !== null) {
+            const numLength = Number(filters.maxLength);
+            if (!isNaN(numLength)) {
+                query.beachLength = {...query.beachLength, $lte: numLength};
+            }
+        }
+
+        if (filters.minUserRating !== undefined && filters.minUserRating !== '') {
+            query.userRating = {...query.userRating, $gte: Number(filters.minUserRating)};
+        }
+
+        if (filters.maxUserRating !== undefined && filters.maxUserRating !== '') {
+            query.userRating = {...query.userRating, $lte: Number(filters.maxUserRating)};
+        }
+
+        if (filters.minAutoRating !== undefined && filters.minAutoRating !== '') {
+            query.autoRating = {...query.autoRating, $gte: Number(filters.minAutoRating)};
+        }
+
+        if (filters.maxAutoRating !== undefined && filters.maxAutoRating !== '') {
+            query.autoRating = {...query.autoRating, $lte: Number(filters.maxAutoRating)};
         }
 
         let filteredBeaches = await beachesCollection.find(query).toArray();
