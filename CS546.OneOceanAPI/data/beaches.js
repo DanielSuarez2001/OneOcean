@@ -9,15 +9,13 @@ const formatBeach = (beach) => ({ ...beach, _id: beach._id.toString() });
 let exportedMethods = {
     async createBeach(beachId, beachName, city, county, status, beachLength, upperLat, lowerLat, upperLon, lowerLon) {
         let beachIdSanatized = generalUtils.validateDatasetId(beachId);
+         let beachLengthSanatized = beachUtils.validateBeachLength(beachLength);
         let beachNameSanatized = beachUtils.validateBeachName(beachName);
         let citySanatized = beachUtils.validateBeachCity(city);
         let countySanatized = beachUtils.validateBeachCounty(county);
+        let geoObjectSanatized = beachUtils.createGeoObject(upperLon, upperLat, lowerLon, lowerLat);
         let statusSanatized = beachUtils.validateBeachStatus(status);
-        let beachLengthSanatized = beachUtils.validateBeachLength(beachLength);
-        let upperLatSanatized = beachUtils.validateCoords(upperLat, 'upperLat');
-        let lowerLatSanatized = beachUtils.validateCoords(lowerLat, 'lowerLat');
-        let upperLonSanatized = beachUtils.validateCoords(upperLon, 'upperLon');
-        let lowerLonSanatized = beachUtils.validateCoords(lowerLon, 'lowerLon');
+       
 
         let newBeach = {
             beachId: beachIdSanatized,
@@ -25,11 +23,8 @@ let exportedMethods = {
             beachName: beachNameSanatized,
             city: citySanatized,
             county: countySanatized,
-            upperLat: upperLatSanatized,
-            lowerLat: lowerLatSanatized,
+            geoObject: geoObjectSanatized,
             status: statusSanatized,
-            upperLon: upperLonSanatized,
-            lowerLon: lowerLonSanatized,
             waterQuality: null,
             userRating: null,
             BeachComments: [],
@@ -70,6 +65,19 @@ let exportedMethods = {
         const currentBeach = await beachesCollection.findOne({_id: id_obj});
         if (currentBeach === null) throw `No beach found with id ${id}`;
         return formatBeach(currentBeach);
+    },
+
+    async getBeachesByDistance(centerLon, centerLat, proximityDistance) {
+        let distanceQuery = {
+            $nearSphere: {
+                $geometry: beachUtils.createGeoObject(centerLon, centerLat),
+                $minDistance: 0,
+                $maxDistance: beachUtils.validateDistance(proximityDistance)
+            }
+        };
+        const beachesCollection = await beaches();
+        const currentBeaches = await beachesCollection.find({geoObject: distanceQuery}).toArray();
+        return currentBeaches.map(formatBeach);
     },
 
   async getBeachesByFilter(filters = {}) {
@@ -129,6 +137,22 @@ let exportedMethods = {
 
         if (filters.maxAutoRating !== undefined && filters.maxAutoRating !== '') {
             query.autoRating = {...query.autoRating, $lte: Number(filters.maxAutoRating)};
+        }
+
+        if (filters.proximity && typeof filters.proximity === 'object') {   
+            query.geoObject = {
+                $nearSphere: {
+                    $geometry: {
+                        type : "Point",
+                        coordinates: [
+                            beachUtils.validateCoords(filters.proximity.longitude, 'proximityLongitude'), 
+                            beachUtils.validateCoords(filters.proximity.latitude, 'proximityLatitude')
+                        ]
+                    },
+                    $minDistance: 0,
+                    $maxDistance: beachUtils.validateDistance(filters.proximity.distance)
+                }
+            };
         }
 
         let filteredBeaches = await beachesCollection.find(query).toArray();

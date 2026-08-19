@@ -117,6 +117,12 @@ a {
   text-align: center;
 }
 
+/* Map / layout */
+
+#map {
+  height: 500px;
+}
+
 /* Auth pages (OOD-18) */
 
 .auth-card {

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import beachData from '../data/beaches.js';
+import beachUtils from '../utils/beach_utils.js';
 
 const router = Router();
 
@@ -104,6 +105,87 @@ router.get('/', async (req, res) => {
     });
   } catch (e) {
     return res.status(500).render('error', { error: 'Could not fetch beaches.' });
+  }
+});
+
+// ==========================================
+// 2. GET /beaches/map (Get Mapped Beaches Page)
+// ==========================================
+router.get('/map', async (req, res) => {
+  try {
+    const { 
+      proximityCenter,
+      proximityDistance,
+      city, 
+      county, 
+      status,
+      minLength, 
+      maxLength,
+      minUserRating,
+      maxUserRating,
+    } = req.query;
+
+    let allBeaches;
+    //filter by proximity
+    if (proximityCenter && proximityDistance && proximityCenter.trim().length > 0 && proximityDistance.trim().length > 0) {
+      let sanatizedProximityCenter = proximityCenter.split(',')
+      let sanatizedProximityDistance = parseFloat(proximityDistance) * 1609.34
+      allBeaches = await beachData.getBeachesByDistance(sanatizedProximityCenter[0], sanatizedProximityCenter[1], sanatizedProximityDistance)
+    }
+    else {
+      allBeaches = await beachData.getAllBeaches();
+    }
+
+    //filter by city
+    if (city && city.trim().length > 0) {
+      const queryCity = city.trim().toLowerCase();
+      allBeaches = allBeaches.filter((beach) => beach.city.trim().toLowerCase() === queryCity);
+    }
+
+    //filter by county
+    if (county && county.trim().length > 0) {
+      const queryCounty = county.trim().toLowerCase()
+      allBeaches = allBeaches.filter((beach) => beach.county.trim().toLowerCase() === queryCounty);
+    }
+
+    //filter by status
+    if (status && status.trim().length > 0) {
+      const queryStatus = status.trim().toLowerCase();
+      allBeaches = allBeaches.filter((beach) => beach.status.trim().toLowerCase() === queryStatus);
+    }
+
+    //filter by min length
+    if (minLength) {
+      const queryMinLength = beachUtils.validateBeachLength(minLength)
+      allBeaches = allBeaches.filter((beach) => beach.beachLength >= queryMinLength);
+    }
+
+    //filter by max length
+    if (maxLength) {
+      const queryMaxLength = beachUtils.validateBeachLength(maxLength)
+      allBeaches = allBeaches.filter((beach) => beach.beachLength <= queryMaxLength);
+    }
+
+    //filter by min user rating
+    if (minUserRating) {
+      const queryMinUserRating = beachUtils.validateRating(minUserRating)
+      allBeaches = allBeaches.filter((beach) => beach.userRating >= queryMinUserRating);
+    }
+
+    //filter by max user rating
+    if (maxUserRating) {
+      const queryMaxUserRating = beachUtils.validateRating(maxUserRating)
+      allBeaches = allBeaches.filter((beach) => beach.userRating <= queryMaxUserRating);
+    }
+
+    return res.render('beaches/map', {
+      title: 'View Beaches',
+      beaches: JSON.stringify(allBeaches),
+      filters: req.query
+    });
+  } catch (e) {
+    console.log(e)
+    return res.status(500).render('error', { error: 'Could not fetch beaches map.' });
   }
 });
 
