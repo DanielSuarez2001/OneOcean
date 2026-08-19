@@ -1,4 +1,9 @@
-<h1>{{title}}</h1>
+<header class="header-container">
+  <h1>{{title}}</h1>
+  <form class="clear-filters" action="/beaches" method="GET">
+    <button class="btn-solid" id="search-button"type="submit">Clear Filters</button>
+  </form>
+</header>
 
 <div class="filter-bar">
   <form class="filter-field" action="/beaches" method="GET">
@@ -10,6 +15,7 @@
 
     <label for="city">City:</label>
     <input type="text" id="city" name="city" placeholder="Search by city">
+    <button class="btn-solid" id="search-button"type="submit">Search</button>
   </form>
 </div>
 <div class="filter-bar">
@@ -43,6 +49,9 @@
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
     </select>
 
     <label for="minUserRating">Min User Rating:</label>
@@ -56,7 +65,7 @@
       <option value="5">5</option>
     </select>
 
-    <button type="submit">Apply Filters</button>
+    <button class="btn-solid" id="filter-button" type="submit">Apply Filters</button>
   </form>
 </div>
 
@@ -69,34 +78,43 @@
     {{/if}}
   </header>
 
-  <a href="/" class="home-link">Return to Home Page</a>
+  
 
-  {{#if beaches.length}}
-    <ol>
-      {{#each beaches}}
-        <li>
-          <p class="searchResult">{{this.beachName}}</p>
-          <a href="/beaches/{{this._id}}">
+{{#if beaches.length}}
+  <ol class="results-list">
+    {{#each beaches}}
+      <li class="search-result">
+        <!-- Left Side: Image, Name, Location -->
+        <div class="result-left">
+          <a href="/beaches/{{this._id}}" class="image-wrapper">
             {{#if this.strBeachThumb}}
               <img class="searchResultImage" alt="{{this.beachName}}" src="{{this.strBeachThumb}}">
             {{else}}
               <img class="searchResultImage" alt="No Image Available" src="/public/images/no_image.jpeg">
             {{/if}}
           </a>
+          <h3 class="searchResult-name">{{this.beachName}}</h3>
+          <div class="beach-location">{{this.city}}, {{this.county}}</div>
+        </div>
 
-          <div class="beach-city">City: {{this.city}}</div>
-          <div class="beach-county">County: {{this.county}}</div>
-          <div class="beach-status">Status: {{this.status}}</div>
-          <div class="beach-length">Beach Length: {{this.beachLength}}</div>
+        <!-- Right Side: Details -->
+        <div class="result-right">
+          <div class="beach-length"><strong>Beach Length:</strong> {{this.beachLength}}</div>
           <div class="water-quality quality-{{this.waterQuality}}">
-            Water Quality: {{#if this.waterQuality}}{{this.waterQuality}}{{else}}Not rated{{/if}}
+            <strong>Water Quality:</strong> {{#if this.waterQuality}}{{this.waterQuality}}{{else}}Not rated{{/if}}
           </div>
-          <div class="user-rating">User Rating: {{#if this.userRating}}{{this.userRating}}{{else}}N/A{{/if}}</div>
-          <div class="auto-rating">Auto Rating: {{#if this.autoRating}}{{this.autoRating}}{{else}}N/A{{/if}}</div>
-        </li>
-      {{/each}}
-    </ol>
+          <div class="user-rating"><strong>User Rating:</strong> {{#if this.userRating}}{{this.userRating}}{{else}}N/A{{/if}}</div>
+        </div>
+      </li>
+    {{/each}}
+  </ol>
   {{else}}
     <p>No beaches matched your search.</p>
   {{/if}}
 </div>
+
+<footer>
+  <form class="post-beach" action="/beaches/create" method="GET">
+    <button class="btn-solid" id="post-beach-button"type="submit">Suggest a Beach!</button>
+  </form>
+</footer>
