@@ -65,6 +65,15 @@
           </select>
      </div>
 
+      <div class="filter-field filter-field-narrow">
+          <label for="filter-activeAdvisories">Active Advisories</label>
+          <select id="filter-activeAdvisories" name="activeAdvisories" data-selected="{{filters.activeAdvisories}}">
+               <option value="">All</option>
+               <option value="Yes">Yes</option>
+               <option value="No">No</option>
+          </select>
+     </div>
+
   <div class="filter-actions">
     <button class="btn-solid" type="submit">Apply</button>
     <a class="filter-clear" href="/beaches/map">Clear</a>

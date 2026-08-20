@@ -22,7 +22,7 @@ export const beachesValidator = {
         description: 'MongoDB-generated beach identifier.'
       },
       beachId: {
-        bsonType: 'string',
+        bsonType: 'int',
         minLength: 1,
         description: 'Unique beach identifier from the CA beach water quality dataset.'
       },

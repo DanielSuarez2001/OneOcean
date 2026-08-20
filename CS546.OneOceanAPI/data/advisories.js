@@ -169,5 +169,4 @@ let exportedMethods = {
         return formatAdvisory(patchedAdvisoryInfo);
   }
 }
-
 export default exportedMethods;
