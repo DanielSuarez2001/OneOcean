@@ -1148,11 +1148,11 @@ a {
   align-self: flex-end;
 }
 
-.post-beach{
+.post-beach {
   display: flex;
   justify-content: center;
 /* Session-aware nav */
-
+}
 .site-user {
   color: var(--color-ocean);
   font-weight: 500;

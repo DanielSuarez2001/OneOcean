@@ -106,11 +106,23 @@ function createProximityCircle(center, radius) {
 
 try {
     let beachData = document.getElementById('beach-data');
-    let filterForm = document.getElementById('beach-filters');
-    let distanceLabel = document.getElementById('distance-label');
-    let distanceRadius = document.getElementById('filter-distance-radius');
-    let distanceCenter = document.getElementById('filter-distance-center');
+    const filterForm = document.getElementById('beach-filters');
+    const distanceLabel = document.getElementById('distance-label');
+    const distanceRadius = document.getElementById('filter-distance-radius');
+    const distanceCenter = document.getElementById('filter-distance-center');
 
+    const statusSelect = document.getElementById('filter-status');
+    const activeAdvisoriesSelect = document.getElementById('filter-activeAdvisories');
+
+    // Restore active filters into the controls (server sends them back as-is)
+    if (statusSelect && statusSelect.dataset.selected) {
+        statusSelect.value = statusSelect.dataset.selected;
+    }
+    if (activeAdvisoriesSelect && activeAdvisoriesSelect.dataset.selected) {
+        activeAdvisoriesSelect.value = activeAdvisoriesSelect.dataset.selected;
+    }
+
+    // Restore interactive map filters or if not used, set default viewpoint
     let currentPoint = null;
     let currentPointCoords = null;
 
@@ -127,6 +139,7 @@ try {
 
     currentPoint = createProximityCircle(currentPointCoords, distanceRadius.value).addTo(map);
     
+
     distanceRadius.addEventListener('input', function() {
         distanceLabel.innerHTML = "Distance: " + this.value + " miles";
         if (currentPoint !== null && currentPointCoords !== null) {

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import beachData from '../data/beaches.js';
 import advisoryData from '../data/advisories.js';
 import beachUtils from '../utils/beach_utils.js';
+import advisoryUtils from '../utils/advisory_utils.js';
 
 const router = Router();
 
@@ -126,6 +127,7 @@ router.get('/map', async (req, res) => {
       maxUserRating,
       minAutoRating,
       maxAutoRating,
+      activeAdvisories
     } = req.query;
 
     let allBeaches;
@@ -191,6 +193,18 @@ router.get('/map', async (req, res) => {
     if (maxAutoRating && !isNaN(+maxAutoRating)) {
       const queryMaxAutoRating = parseFloat(maxAutoRating);
       allBeaches = allBeaches.filter((beach) => beach.autoRating !== null && beach.autoRating !== undefined && beach.autoRating <= queryMaxAutoRating);
+    }
+
+    //filter by has active advisories
+    if (activeAdvisories && activeAdvisories.trim().length > 0) {
+      let allAdvisories = await Promise.all(allBeaches.map(async (beach) => await advisoryData.getActiveAdvisoriesByBeachId(beach._id)));
+      const queryAdvisories = activeAdvisories.trim().toLowerCase();
+      if (queryAdvisories === 'yes') {
+        allBeaches = allBeaches.filter((beach, index) => allAdvisories[index].length > 0);
+      }
+      else if (queryAdvisories === 'no') {
+        allBeaches = allBeaches.filter((beach, index) => allAdvisories[index].length === 0);
+      }
     }
 
     return res.render('beaches/map', {

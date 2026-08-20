@@ -36,7 +36,7 @@ const buildAdvisoriesByBeachId = (advisoryRows) => {
 const numberOrFallback = (value, fallbackValue) => (value ? Number(value) : Number(fallbackValue));
 
 const toBeachDocument = (row, advisoriesByBeachId) => ({
-  beachId: row.BeachName_id,
+  beachId: Number(row.BeachName_id),
   beachName: row.Beach_Name.trim(),
   city: row.NearestCityName.trim(),
   county: row.County.trim(),
