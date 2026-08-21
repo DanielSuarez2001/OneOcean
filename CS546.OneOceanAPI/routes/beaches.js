@@ -8,9 +8,9 @@ import { checkId, checkString, checkNumber, errorMessage } from '../helpers.js';
 
 const router = Router();
 
-const SANTA_MONICA_STATE_BEACH_CENTER = {
-  longitude: (-118.49 + -118.51) / 2,
-  latitude: (34.025 + 34.005) / 2
+const LONG_BEACH_CENTER = {
+  longitude: -118.1937,
+  latitude: 33.7701
 };
 
 const toMapBeach = (b) => ({
@@ -38,9 +38,6 @@ const serializeForScriptTag = (value) =>
 // ==========================================
 router.get('/', async (req, res) => {
   try {
-
-    let allBeaches = await beachData.getAllBeaches();
-
     const { 
       search, 
       name,
@@ -60,28 +57,30 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     const effectiveMinLength = minLength || minSize;
-    if (effectiveMinLength && !isNaN(+effectiveMinLength)) {
-      allBeaches = allBeaches.filter((b) => b.beachLength >= parseFloat(effectiveMinLength));
-    }
-
     const effectiveMaxLength = maxLength || maxSize;
-    if (effectiveMaxLength && !isNaN(+effectiveMaxLength)) {
-      allBeaches = allBeaches.filter((b) => b.beachLength <= parseFloat(effectiveMaxLength));
+    const filters = {
+      name,
+      county,
+      city,
+      status,
+      waterQuality,
+      minLength: effectiveMinLength,
+      maxLength: effectiveMaxLength,
+      minUserRating,
+      maxUserRating,
+      minAutoRating,
+      maxAutoRating
+    };
+
+    if (proximityDistance && !isNaN(+proximityDistance) && +proximityDistance > 0) {
+      filters.proximity = {
+        longitude: LONG_BEACH_CENTER.longitude,
+        latitude: LONG_BEACH_CENTER.latitude,
+        distance: +proximityDistance * 1609.34
+      };
     }
 
-    if (minUserRating && !isNaN(+minUserRating)) {
-      allBeaches = allBeaches.filter((b) => b.userRating !== null && b.userRating !== undefined && b.userRating >= parseFloat(minUserRating));
-    }
-    if (maxUserRating && !isNaN(+maxUserRating)) {
-      allBeaches = allBeaches.filter((b) => b.userRating !== null && b.userRating !== undefined && b.userRating <= parseFloat(maxUserRating));
-    }
-
-    if (minAutoRating && !isNaN(+minAutoRating)) {
-      allBeaches = allBeaches.filter((b) => b.autoRating !== null && b.autoRating !== undefined && b.autoRating >= parseFloat(minAutoRating));
-    }
-    if (maxAutoRating && !isNaN(+maxAutoRating)) {
-      allBeaches = allBeaches.filter((b) => b.autoRating !== null && b.autoRating !== undefined && b.autoRating <= parseFloat(maxAutoRating));
-    }
+    let allBeaches = await beachData.getBeachesByFilter(filters);
 
     const currentUser = req.session && req.session.user
       ? await userData.getUserById(req.session.user._id)
@@ -97,8 +96,7 @@ router.get('/', async (req, res) => {
     return res.render('beaches/search', {
       title: 'Explore Beaches',
       beaches: allBeaches,
-      searchQuery: search || name || county || city || '',
-      proximityDistance: proximityDistance || ''
+      searchQuery: search || name || county || city || proximityDistance || '',
     });
   } catch (e) {
     return res.status(500).render('error', { error: 'Could not fetch beaches.' });

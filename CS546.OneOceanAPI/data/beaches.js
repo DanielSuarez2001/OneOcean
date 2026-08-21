@@ -177,19 +177,8 @@ let exportedMethods = {
         }
 
         if (filters.proximity && typeof filters.proximity === 'object') {   
-            query.geoObject = {
-                $nearSphere: {
-                    $geometry: {
-                        type: "Point",
-                        coordinates: [
-                            beachUtils.validateCoords(filters.proximity.longitude, 'proximityLongitude'), 
-                            beachUtils.validateCoords(filters.proximity.latitude, 'proximityLatitude')
-                        ]
-                    },
-                    $minDistance: 0,
-                    $maxDistance: beachUtils.validateDistance(filters.proximity.distance)
-                }
-            };
+            let nearbyBeaches = await this.getBeachesByDistance(filters.proximity.longitude, filters.proximity.latitude, filters.proximity.distance);
+            query._id = { $in: nearbyBeaches.map((b) => b._id) };
         }
 
         let filteredBeaches = await beachesCollection.find(query).toArray();
