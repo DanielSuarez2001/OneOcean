@@ -18,7 +18,8 @@ const exportedMethods = {
       age: userUtils.validateAge(age),
       hashedPassword: userUtils.validateAndHashPassword(password),
       favoriteBeaches: [],
-      isBookmarksPrivate: false
+      isBookmarksPrivate: false,
+      friends: []
     };
 
     const usersCollection = await users();
@@ -159,6 +160,36 @@ const exportedMethods = {
       { returnDocument: 'after' }
     );
     if (!updatedUser) throw 'No user found with that id';
+    return formatUser(updatedUser);
+  },
+
+  async addFriend(userId, friendId) {
+    const id = generalUtils.checkId(userId);
+    const targetId = generalUtils.checkId(friendId);
+  if (id === targetId) throw 'You cannot add yourself as a friend';
+    await this.getUserById(targetId); // Ensures friend exists
+
+    const usersCollection = await users();
+    const updatedUser = await usersCollection.findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $addToSet: { friends: targetId } },
+    { returnDocument: 'after' }
+  );
+  if (!updatedUser) throw 'Could not add friend';
+    return formatUser(updatedUser);
+  },
+
+  async removeFriend(userId, friendId) {
+    const id = generalUtils.checkId(userId);
+    const targetId = generalUtils.checkId(friendId);
+
+    const usersCollection = await users();
+    const updatedUser = await usersCollection.findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $pull: { friends: targetId } },
+    { returnDocument: 'after' }
+  );
+  if (!updatedUser) throw 'Could not remove friend';
     return formatUser(updatedUser);
   }
 };

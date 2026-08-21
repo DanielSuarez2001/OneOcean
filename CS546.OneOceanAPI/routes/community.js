@@ -3,6 +3,7 @@ import moment from 'moment';
 import eventData from '../data/events.js';
 import beachData from '../data/beaches.js';
 import advisoryData from '../data/advisories.js';
+import userData from '../data/users.js'; // Added users data import
 import { checkId, checkString, errorMessage } from '../helpers.js';
 
 const router = Router();
@@ -78,7 +79,10 @@ const buildActiveAdvisories = (advisories, beaches) => {
 // ==========================================
 router.get('/', async (req, res) => {
   try {
-    let eventsList = await eventData.getAllEvents();
+    const currentUserId = req.session && req.session.user ? req.session.user._id : null;
+    
+    // Uses getVisibleEvents to filter out friends-only events for unauthorized users
+    let eventsList = await eventData.getVisibleEvents(currentUserId);
 
     const { date, startTime, type, minAttendance } = req.query;
 
@@ -170,7 +174,8 @@ router.post('/create', async (req, res) => {
       startTimeChecked,
       endTimeChecked,
       meetingLocationChecked,
-      additionalDetailsChecked
+      additionalDetailsChecked,
+      visibility
     );
 
     return res.redirect(`/community/${newEvent._id}`);
@@ -197,6 +202,21 @@ router.get('/:id', async (req, res) => {
     //pass session user so the view knows RSVP/host state
     const sessionUser = req.session && req.session.user ? req.session.user : null;
     const userId = sessionUser ? sessionUser._id.toString() : null;
+
+    // Enforce Friends-Only Access Control
+    if (event.visibility === 'friends') {
+      if (!userId) {
+        return res.status(403).render('error', { error: 'This event is restricted to friends of the host.' });
+      }
+
+      const isHost = event.hostId.toString() === userId;
+      const currentUser = await userData.getUserById(userId);
+      const isFriend = Array.isArray(currentUser.friends) && currentUser.friends.some((f) => f.toString() === event.hostId.toString());
+
+      if (!isHost && !isFriend) {
+        return res.status(403).render('error', { error: 'This event is restricted to friends of the host.' });
+      }
+    }
 
     return res.render('community/single', {
       title: event.eventName,

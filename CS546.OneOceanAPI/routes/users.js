@@ -20,6 +20,27 @@ const resolveBeaches = async (beachIds) => {
   return resolved;
 };
 
+// Helper: Resolve a list of friend IDs into user summary objects
+const resolveFriends = async (friendIds) => {
+  const resolved = [];
+  for (const friendId of friendIds) {
+    try {
+      const friend = await userData.getUserById(friendId);
+      if (friend) {
+        resolved.push({
+          _id: friend._id,
+          firstName: friend.firstName,
+          lastName: friend.lastName,
+          email: friend.email
+        });
+      }
+    } catch {
+      // Skip missing users
+    }
+  }
+  return resolved;
+};
+
 // ==========================================
 // 1. GET /profile (Show current logged-in profile)
 // ==========================================
@@ -35,6 +56,10 @@ router.get('/profile', async (req, res) => {
     // Saved beaches (bookmarks)
     const favoriteIds = user.favoriteBeaches || [];
     const bookmarks = await resolveBeaches(favoriteIds);
+
+    // Resolved Friends List
+    const friendIds = user.friends || [];
+    const friendsList = await resolveFriends(friendIds);
 
     // Reviews: this user's ratings/comments left across all beaches
     const allBeaches = await beachData.getAllBeaches();
@@ -73,7 +98,8 @@ router.get('/profile', async (req, res) => {
       initials: initials,
       bookmarks: bookmarks,
       reviews: reviews,
-      events: attendingEvents
+      events: attendingEvents,
+      friends: friendsList // Passed to handlebar view
     });
   } catch (e) {
     return res.status(500).render('error', { error: 'Could not load profile.' });
@@ -81,7 +107,56 @@ router.get('/profile', async (req, res) => {
 });
 
 // ==========================================
-// 2. GET /profile/edit (Show edit form for logged-in user)
+// 2. POST /friends/add (Add a friend)
+// ==========================================
+router.post('/friends/add', async (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.redirect('/login');
+  }
+
+  const userId = req.session.user._id;
+  let { friendId, friendEmail } = req.body;
+
+  try {
+    let targetFriendId = friendId;
+
+    // Support looking up a friend by email if entered in input form
+    if (!targetFriendId && friendEmail) {
+      const targetUser = await userData.getUserByEmail(checkEmail(friendEmail));
+      targetFriendId = targetUser._id;
+    }
+
+    targetFriendId = checkId(targetFriendId, 'Friend ID');
+
+    await userData.addFriend(userId, targetFriendId);
+    return res.redirect('/profile');
+  } catch (e) {
+    return res.status(400).render('error', { error: errorMessage(e, 'Could not add friend.') });
+  }
+});
+
+// ==========================================
+// 3. POST /friends/remove (Remove a friend)
+// ==========================================
+router.post('/friends/remove', async (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.redirect('/login');
+  }
+
+  const userId = req.session.user._id;
+
+  try {
+    const friendId = checkId(req.body.friendId, 'Friend ID');
+
+    await userData.removeFriend(userId, friendId);
+    return res.redirect('/profile');
+  } catch (e) {
+    return res.status(400).render('error', { error: errorMessage(e, 'Could not remove friend.') });
+  }
+});
+
+// ==========================================
+// 4. GET /profile/edit (Show edit form for logged-in user)
 // ==========================================
 router.get('/profile/edit', async (req, res) => {
   if (!req.session || !req.session.user) {
@@ -110,7 +185,7 @@ router.get('/profile/edit', async (req, res) => {
 });
 
 // ==========================================
-// 3. POST /profile/edit (Update logged-in user's details)
+// 5. POST /profile/edit (Update logged-in user's details)
 // ==========================================
 router.post('/profile/edit', async (req, res) => {
   if (!req.session || !req.session.user) {
@@ -133,7 +208,6 @@ router.post('/profile/edit', async (req, res) => {
 
     const updatedUser = await userData.patchUser(userId, updateObject);
 
-    // keep the session copy in sync with the fields it stores
     req.session.user = {
       _id: updatedUser._id.toString(),
       email: updatedUser.email,
@@ -152,7 +226,7 @@ router.post('/profile/edit', async (req, res) => {
 });
 
 // ==========================================
-// 4. GET /bookmarks (Show current user's saved beaches)
+// 6. GET /bookmarks (Show current user's saved beaches)
 // ==========================================
 router.get('/bookmarks', async (req, res) => {
   if (!req.session || !req.session.user) {
@@ -178,7 +252,7 @@ router.get('/bookmarks', async (req, res) => {
 });
 
 // ==========================================
-// 5. POST /bookmarks/:beachId (Add bookmark)
+// 7. POST /bookmarks/:beachId (Add bookmark)
 // ==========================================
 router.post('/bookmarks/:beachId', async (req, res) => {
   if (!req.session || !req.session.user) {
@@ -198,7 +272,7 @@ router.post('/bookmarks/:beachId', async (req, res) => {
 });
 
 // ==========================================
-// 6. POST /bookmarks/:beachId/delete (Remove bookmark via HTML Form)
+// 8. POST /bookmarks/:beachId/delete (Remove bookmark via HTML Form)
 // ==========================================
 router.post('/bookmarks/:beachId/delete', async (req, res) => {
   if (!req.session || !req.session.user) {
@@ -218,7 +292,7 @@ router.post('/bookmarks/:beachId/delete', async (req, res) => {
 });
 
 // ======================================================
-// 7. GET /users/:id/favorites (List target user's favorites + Privacy)
+// 9. GET /users/:id/favorites (List target user's favorites + Privacy)
 // ======================================================
 router.get('/users/:id/favorites', async (req, res) => {
   try {
@@ -263,7 +337,7 @@ router.get('/users/:id/favorites', async (req, res) => {
 });
 
 // ======================================================
-// 8. POST /users/:id/favorites (RESTful Add Favorite)
+// 10. POST /users/:id/favorites (RESTful Add Favorite)
 // ======================================================
 router.post('/users/:id/favorites', async (req, res) => {
   if (!req.session || !req.session.user) {
@@ -289,7 +363,7 @@ router.post('/users/:id/favorites', async (req, res) => {
 });
 
 // ======================================================
-// 9. DELETE /users/:id/favorites/:beachId (RESTful Remove Favorite)
+// 11. DELETE /users/:id/favorites/:beachId (RESTful Remove Favorite)
 // ======================================================
 router.delete('/users/:id/favorites/:beachId', async (req, res) => {
   if (!req.session || !req.session.user) {
@@ -314,7 +388,7 @@ router.delete('/users/:id/favorites/:beachId', async (req, res) => {
 });
 
 // ======================================================
-// 10. PATCH /users/:id/favorites/visibility (Toggle Privacy)
+// 12. PATCH /users/:id/favorites/visibility (Toggle Privacy)
 // ======================================================
 router.patch('/users/:id/favorites/visibility', async (req, res) => {
   if (!req.session || !req.session.user) {
