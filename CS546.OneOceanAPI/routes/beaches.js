@@ -8,6 +8,11 @@ import { checkId, checkString, checkNumber, errorMessage } from '../helpers.js';
 
 const router = Router();
 
+const LONG_BEACH_CENTER = {
+  longitude: -118.149475,
+  latitude: 33.7543085
+};
+
 const toMapBeach = (b) => ({
   _id: b._id,
   beachName: b.beachName,
@@ -33,8 +38,6 @@ const serializeForScriptTag = (value) =>
 // ==========================================
 router.get('/', async (req, res) => {
   try {
-    let allBeaches = await beachData.getAllBeaches();
-
     const { 
       search, 
       name,
@@ -49,78 +52,35 @@ router.get('/', async (req, res) => {
       minAutoRating,
       maxAutoRating,
       minSize,
-      maxSize
+      maxSize,
+      proximityDistance
     } = req.query;
 
-    if (search && search.trim().length > 0) {
-      const query = search.trim().toLowerCase();
-      allBeaches = allBeaches.filter(
-        (beach) =>
-          (beach.beachName && beach.beachName.toLowerCase().includes(query)) ||
-          (beach.county && beach.county.toLowerCase().includes(query)) ||
-          (beach.city && beach.city.toLowerCase().includes(query))
-      );
-    }
-    
-    if (name && name.trim().length > 0) {
-      const nameQuery = name.trim().toLowerCase();
-      allBeaches = allBeaches.filter((b) =>
-        b.beachName && b.beachName.toLowerCase().includes(nameQuery)
-      );
-    }
-
-    if (county && county.trim().length > 0) {
-      const countyQuery = county.trim().toLowerCase();
-      allBeaches = allBeaches.filter((b) =>
-        b.county && b.county.toLowerCase().includes(countyQuery)
-      );
-    }
-
-    if (city && city.trim().length > 0) {
-      const cityQuery = city.trim().toLowerCase();
-      allBeaches = allBeaches.filter((b) =>
-        b.city && b.city.toLowerCase().includes(cityQuery)
-      );
-    }
-
-    if (status && status.trim().length > 0) {
-      const statusQuery = status.trim().toLowerCase();
-      allBeaches = allBeaches.filter(
-        (b) => b.status && b.status.toLowerCase() === statusQuery
-      );
-    }
-
-    if (waterQuality && waterQuality.trim().length > 0 && !isNaN(+waterQuality)) {
-      const minWaterQuality = parseFloat(waterQuality);
-      allBeaches = allBeaches.filter((b) =>
-        b.waterQuality !== null && b.waterQuality !== undefined &&
-        b.waterQuality >= minWaterQuality
-      );
-    }
-
     const effectiveMinLength = minLength || minSize;
-    if (effectiveMinLength && !isNaN(+effectiveMinLength)) {
-      allBeaches = allBeaches.filter((b) => b.beachLength >= parseFloat(effectiveMinLength));
-    }
-
     const effectiveMaxLength = maxLength || maxSize;
-    if (effectiveMaxLength && !isNaN(+effectiveMaxLength)) {
-      allBeaches = allBeaches.filter((b) => b.beachLength <= parseFloat(effectiveMaxLength));
+    const filters = {
+      name,
+      county,
+      city,
+      status,
+      waterQuality,
+      minLength: effectiveMinLength,
+      maxLength: effectiveMaxLength,
+      minUserRating,
+      maxUserRating,
+      minAutoRating,
+      maxAutoRating
+    };
+
+    if (proximityDistance && !isNaN(+proximityDistance) && +proximityDistance > 0) {
+      filters.proximity = {
+        longitude: LONG_BEACH_CENTER.longitude,
+        latitude: LONG_BEACH_CENTER.latitude,
+        distance: +proximityDistance * 1609.34
+      };
     }
 
-    if (minUserRating && !isNaN(+minUserRating)) {
-      allBeaches = allBeaches.filter((b) => b.userRating !== null && b.userRating !== undefined && b.userRating >= parseFloat(minUserRating));
-    }
-    if (maxUserRating && !isNaN(+maxUserRating)) {
-      allBeaches = allBeaches.filter((b) => b.userRating !== null && b.userRating !== undefined && b.userRating <= parseFloat(maxUserRating));
-    }
-
-    if (minAutoRating && !isNaN(+minAutoRating)) {
-      allBeaches = allBeaches.filter((b) => b.autoRating !== null && b.autoRating !== undefined && b.autoRating >= parseFloat(minAutoRating));
-    }
-    if (maxAutoRating && !isNaN(+maxAutoRating)) {
-      allBeaches = allBeaches.filter((b) => b.autoRating !== null && b.autoRating !== undefined && b.autoRating <= parseFloat(maxAutoRating));
-    }
+    let allBeaches = await beachData.getBeachesByFilter(filters);
 
     const currentUser = req.session && req.session.user
       ? await userData.getUserById(req.session.user._id)
@@ -136,7 +96,7 @@ router.get('/', async (req, res) => {
     return res.render('beaches/search', {
       title: 'Explore Beaches',
       beaches: allBeaches,
-      searchQuery: search || name || county || city ||''
+      searchQuery: search || name || county || city || proximityDistance || '',
     });
   } catch (e) {
     return res.status(500).render('error', { error: 'Could not fetch beaches.' });

@@ -123,6 +123,10 @@ let exportedMethods = {
             ];
         }
 
+        if (filters.name && typeof filters.name === 'string' && filters.name.trim().length > 0) {
+            query.beachName = { $regex: new RegExp(filters.name.trim(), 'i') };
+        }
+
         if (filters.county && typeof filters.county === 'string' && filters.county.trim().length > 0) {
             query.county = { $regex: new RegExp(filters.county.trim(), 'i') };
         }
@@ -172,18 +176,18 @@ let exportedMethods = {
             query.autoRating = { ...query.autoRating, $lte: Number(filters.maxAutoRating) };
         }
 
-        if (filters.proximity && typeof filters.proximity === 'object') {   
+        if (filters.proximity && typeof filters.proximity === 'object') {
             query.geoObject = {
                 $nearSphere: {
                     $geometry: {
-                        type: "Point",
-                        coordinates: [
-                            beachUtils.validateCoords(filters.proximity.longitude, 'proximityLongitude'), 
-                            beachUtils.validateCoords(filters.proximity.latitude, 'proximityLatitude')
-                        ]
+                    type: "Point",
+                    coordinates: [
+                        beachUtils.validateCoords(filters.proximity.longitude, 'proximityLongitude'),
+                        beachUtils.validateCoords(filters.proximity.latitude, 'proximityLatitude')
+                    ]
                     },
-                    $minDistance: 0,
-                    $maxDistance: beachUtils.validateDistance(filters.proximity.distance)
+                        $minDistance: 0,
+                        $maxDistance: beachUtils.validateDistance(filters.proximity.distance)
                 }
             };
         }
