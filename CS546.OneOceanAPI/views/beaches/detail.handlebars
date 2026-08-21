@@ -1,1 +1,78 @@
-<h1>{{title}}</h1>
+<a class="back-link" href="/beaches">&larr; All beaches</a>
+
+<article class="beach-detail">
+    <header class="beach-detail-head">
+        <div>
+            <span class="beach-chip">{{beach.status}}</span>
+            <h1>{{beach.beachName}}</h1>
+            <p class="beach-detail-location">{{beach.city}}, {{beach.county}} County</p>
+        </div>
+        <img class="beach-detail-image" src="/images/beachStockImage.jpg" alt="{{beach.beachName}}">
+    </header>
+
+    <dl class="beach-detail-grid">
+        <div>
+            <dt>Beach length</dt>
+            <dd>{{beach.beachLength}} miles</dd>
+        </div>
+        <div>
+            <dt>Water quality</dt>
+            <dd>{{#if beach.waterQuality}}{{beach.waterQuality}} / 10{{else}}Not rated{{/if}}</dd>
+        </div>
+        <div>
+            <dt>User rating</dt>
+            <dd>{{#if beach.userRating}}{{beach.userRating}} / 5{{else}}Not rated{{/if}}</dd>
+        </div>
+    </dl>
+
+    <section class="beach-advisories" aria-labelledby="advisories-title">
+        <h2 id="advisories-title">Advisories and closures</h2>
+        {{#if hasActiveAdvisories}}
+            <ul class="advisory-list">
+                {{#each activeAdvisories}}
+                    <li class="advisory-item">
+                        <strong>{{this.advisoryType}}</strong>
+                        <span>{{this.advisoryCause}}</span>
+                        <small>{{this.advisoryStartDate}}{{#if this.advisoryEndDate}} &mdash; {{this.advisoryEndDate}}{{/if}}</small>
+                    </li>
+                {{/each}}
+            </ul>
+        {{else}}
+            <p class="beach-detail-muted">No active advisories or closures reported.</p>
+        {{/if}}
+    </section>
+</article>
+
+<section class="beach-comments" aria-labelledby="comments-title">
+    <h2 id="comments-title">Comments ({{beach.BeachComments.length}})</h2>
+
+    {{#if beach.BeachComments.length}}
+        <ul class="comment-list">
+            {{#each beach.BeachComments}}
+                <li class="comment">
+                    <p class="comment-head">
+                        <span class="comment-author">{{this.name}}</span>
+                        <span class="comment-time">{{this.postTime}}</span>
+                    </p>
+                    <p class="comment-body">{{this.comment}}</p>
+                </li>
+            {{/each}}
+        </ul>
+    {{else}}
+        <p class="beach-detail-muted">No comments yet. Start the conversation.</p>
+    {{/if}}
+
+    {{#if user}}
+        <form class="comment-form" method="POST" action="/beaches/{{beach._id}}/comments">
+            <label for="beach-comment">Add a comment</label>
+            <textarea id="beach-comment" name="comment" rows="3" maxlength="1000" required></textarea>
+            <button class="btn-solid" type="submit">Post Comment</button>
+        </form>
+    {{else}}
+        <p class="beach-detail-muted"><a href="/login">Log in</a> to join the conversation.</p>
+    {{/if}}
+</section>
+
+
+
+
