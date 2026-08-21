@@ -158,7 +158,7 @@ let exportedMethods = {
         } else {
             ratingSanatized = rating;
         }
-        if (ratingSanatized <= 0 || ratingSanatized >= 5) {
+        if (ratingSanatized <= 0 || ratingSanatized > 5) {
             throw 'rating must be a number greater than 0 and less than or equal to 5';
         }
         return ratingSanatized;
