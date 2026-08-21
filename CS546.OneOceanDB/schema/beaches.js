@@ -113,6 +113,7 @@ export const beachesIndexes = [
   },
   {
     key: { geoObject: '2dsphere' },
-    name: 'beaches_geoObject_2dsphere'
+    name: 'beaches_geoObject_2dsphere',
+    unique: false
   }
 ];

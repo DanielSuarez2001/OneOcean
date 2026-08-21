@@ -80,7 +80,7 @@ try {
     const options = { name: index.name, unique: index.unique };
     if (index.collation) options.collation = index.collation;
     await beaches.createIndex(index.key, options);
-    await beaches.createIndex({geoObject: "2dsphere"});
+    // await beaches.createIndex({geoObject: "2dsphere"});
   }
 
   const bulkOps = beachDocuments.map((doc) => ({

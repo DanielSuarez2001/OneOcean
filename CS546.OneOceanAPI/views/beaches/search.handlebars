@@ -8,13 +8,13 @@
 <div class="filter-bar">
   <form class="filter-field" action="/beaches" method="GET">
     <label for="search">Name:</label>
-    <input type="text" id="name" name="name" value="{{searchQuery}}" placeholder="Search by name">
+    <input type="text" id="name" name="name" value="{{searchQuery.name}}" placeholder="Search by name">
 
     <label for="county">County:</label>
-    <input type="text" id="county" name="county" placeholder="Search by county">
+    <input type="text" id="county" name="county" value="{{searchQuery.county}}" placeholder="Search by county">
 
     <label for="city">City:</label>
-    <input type="text" id="city" name="city" placeholder="Search by city">
+    <input type="text" id="city" name="city" value="{{searchQuery.city}}" placeholder="Search by city">
 
     <button class="btn-solid" id="search-button"type="submit">Search</button>
   </form>

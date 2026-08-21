@@ -9,8 +9,8 @@ import { checkId, checkString, checkNumber, errorMessage } from '../helpers.js';
 const router = Router();
 
 const LONG_BEACH_CENTER = {
-  longitude: -118.1937,
-  latitude: 33.7701
+  longitude: -118.149475,
+  latitude: 33.7543085
 };
 
 const toMapBeach = (b) => ({
