@@ -64,7 +64,9 @@ export const beachesValidator = {
           additionalProperties: false,
           properties: {
             _id: { bsonType: 'objectId' },
+            commenterId: { bsonType: 'objectId'},
             name: { bsonType: 'string', minLength: 1, maxLength: 100 },
+            postTime: { bsonType: 'string'},
             comment: { bsonType: 'string', minLength: 1, maxLength: 1000 }
           }
         }
