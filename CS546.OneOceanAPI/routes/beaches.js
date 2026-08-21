@@ -103,7 +103,7 @@ router.get('/', async (req, res) => {
     return res.render('beaches/search', {
       title: 'Explore Beaches',
       beaches: allBeaches,
-      searchQuery: search || name || ''
+      searchQuery: search || name || county || city ||''
     });
   } catch (e) {
     return res.status(500).render('error', { error: 'Could not fetch beaches.' });
