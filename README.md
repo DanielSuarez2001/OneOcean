@@ -1,4 +1,4 @@
-# One Ocean 🌊
+# One Ocean
 
 An all-in-one platform for California beachgoers to find, explore, and connect around public beaches.
 
@@ -8,7 +8,7 @@ One Ocean helps users search and filter public California beaches by location, w
 
 This project is being built for a web development course (Professor Patrick Hill) and uses a full CRUD stack — MongoDB, Express, Handlebars, and Node.js — without any frontend framework (no React).
 
-> **Status:** In active development. The site shell (header/nav, branding, shared layout) is in place, and most core features are now implemented end-to-end. Signup/login/logout is wired to pages with client-side validation and MongoDB-backed sessions; beach search/filter, beach detail pages with comments and ratings, community events (full CRUD + RSVP + comments), bookmarks with a privacy toggle, and user profiles all have working routes, data functions, and views. Advisories have a data layer and importer but are not yet surfaced in the UI.
+> **Status:** In active development. The site shell (header/nav, branding, shared layout) is in place, and most core features are now implemented end-to-end. Signup/login/logout is wired to pages with client-side validation and MongoDB-backed sessions; beach search/filter (including a map view with proximity search), beach detail pages with comments and ratings, active advisories surfaced on beach pages and in the community activity feed, community events (full CRUD + RSVP + comments), bookmarks with a privacy toggle, and user profiles all have working routes, data functions, and views. Route-layer input validation (`helpers.js`) now backs every mutation route, on top of the existing client-side and data-layer checks. `npm run seed` populates a full demo dataset — real beaches/advisories/water-quality scores from the CA open dataset, plus demo users, events, comments, and ratings — see [`CS546.OneOceanAPI/README.md`](CS546.OneOceanAPI/README.md) for the seed command and demo login credentials.
 
 ## Team
 
@@ -34,17 +34,18 @@ This project is being built for a web development course (Professor Patrick Hill
 
 ### Core
 
-- **Search & Find Beaches** — search by name, county, or city; filter by county, city, status, water quality, beach length, and user/auto ratings
-- **Beach Detail Pages** — location, length, water quality, status, and user comments; ratings and comments handled in the data layer
+- **Search & Find Beaches** — search by name, county, or city; filter by county, city, status, minimum water quality, beach length, and user/auto ratings; a dedicated map view adds proximity search and an active-advisories toggle
+- **Beach Detail Pages** — location, length, water quality, status, active advisories, and user comments; ratings and comments handled in the data layer
+- **Advisories & Closures** — active advisories (closures, postings, rain advisories) surface on beach detail pages and in the community activity feed
 - **Social/Community Tab** — host, edit, and cancel beach meetup events; RSVP and comment on events; filter events by date, start time, type, and minimum attendance
 - **Bookmarked Beaches** — save favorite beaches, toggle bookmark list privacy, and view other users' public favorites
 - **User Profiles** — user info, reviews left, saved beaches, and events being attended
 
 ### In Progress / Planned
 
-- **Advisories in the UI** — advisory data layer (`data/advisories.js`) and importer exist; surfacing active advisories/closures on beach pages is still pending
 - Live weather, tide, and UV index data on beach pages
 - Friends system with friend-only event visibility
+- Reconciling the API's runtime document shape with `CS546.OneOceanDB`'s stricter Mongo schema validators, so a single seed/import path can satisfy both
 
 ## Project Structure
 
@@ -52,7 +53,7 @@ This project is being built for a web development course (Professor Patrick Hill
 CS546.OneOceanAPI/       # Express API + Handlebars frontend (MongoDB, routes, views)
   app.js                 # Express app setup (middleware, sessions, view engine, routes)
   server.js              # Entry point — starts the HTTP server
-  seed.js                # Seeds a few sample beaches into the database
+  seed.js                # Drops the DB and reseeds every collection from the live CA dataset + demo content
   middleware.js          # Request logger + global error handler
   helpers.js             # Shared validation helpers (strings, ids, email, number, date)
   config/
@@ -94,21 +95,20 @@ npm run dev            # or: npm start
 
 `npm run dev` runs the server with `node --watch` for auto-reload; `npm start` runs it without watching.
 
-To load a few sample beaches for local development:
+To populate the database with a full demo dataset (real beaches/advisories/water-quality scores fetched live from the CA open dataset, plus demo users, events, comments, and ratings):
 
 ```bash
 cd CS546.OneOceanAPI
-node seed.js
+npm run seed
 ```
 
-Before starting the API for the first time, initialize the database contracts (validators + indexes) and optionally import real beach data:
+This drops and repopulates every collection — see [`CS546.OneOceanAPI/README.md`](CS546.OneOceanAPI/README.md#seeding-the-database) for the demo login credentials and data provenance. `CS546.OneOceanDB` is only needed if you want to apply its separate, stricter Mongo `$jsonSchema` validators/indexes (not required to get real data — `npm run seed` does that on its own):
 
 ```bash
 cd CS546.OneOceanDB
 npm install
 cp .env.example .env       # use the same MONGO_URI / MONGO_DB_NAME as the API
 npm run setup              # applies users & beaches validators/indexes
-npm run import:beaches     # imports beaches from the CA open dataset
 ```
 
 The API reads its configuration from environment variables (see `.env.example`):
