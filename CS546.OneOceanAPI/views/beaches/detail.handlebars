@@ -6,6 +6,19 @@
             <span class="beach-chip">{{beach.status}}</span>
             <h1>{{beach.beachName}}</h1>
             <p class="beach-detail-location">{{beach.city}}, {{beach.county}} County</p>
+            {{#if user}}
+                {{#if isBookmarked}}
+                    <form class="beach-bookmark-form" method="POST" action="/bookmarks/{{beach._id}}/delete">
+                        <button id="remove-bookmark-btn" class="btn-outline" type="submit">Remove Bookmark</button>
+                    </form>
+                {{else}}
+                    <form class="beach-bookmark-form" method="POST" action="/bookmarks/{{beach._id}}">
+                        <button class="btn-solid" type="submit">Bookmark Beach</button>
+                    </form>
+                {{/if}}
+            {{else}}
+                <a class="btn-outline beach-bookmark-link" href="/login">Log in to bookmark</a>
+            {{/if}}
         </div>
         <img class="beach-detail-image" src="/images/beachStockImage.jpg" alt="{{beach.beachName}}">
     </header>
