@@ -1259,8 +1259,8 @@ a {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 10px;
-  font-size: 0.95rem;
+  gap: 20px;
+  font-size: 1.5rem;
   color: #334155;
 }
 

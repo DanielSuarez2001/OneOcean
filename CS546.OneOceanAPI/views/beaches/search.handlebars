@@ -115,7 +115,7 @@
 
         <!-- Right Side: Details -->
         <div class="result-right">
-          <div class="beach-length"><strong>Beach Length:</strong> {{this.beachLength}}</div>
+          <div class="beach-length"><strong>Beach Length:</strong> {{this.beachLength}} miles</div>
           <div class="water-quality quality-{{this.waterQuality}}">
             <strong>Water Quality:</strong> {{#if this.waterQuality}}{{this.waterQuality}}{{else}}Not rated{{/if}}
           </div>
@@ -129,9 +129,3 @@
     <p>No beaches matched your search.</p>
   {{/if}}
 </div>
-
-<footer>
-  <form class="post-beach" action="/beaches/create" method="GET">
-    <button class="btn-solid" id="post-beach-button"type="submit">Suggest a Beach!</button>
-  </form>
-</footer>
