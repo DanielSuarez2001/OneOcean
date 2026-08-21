@@ -227,7 +227,7 @@ router.get('/:id', async (req, res) => {
     const beach = await beachData.getBeachById(beachId);
     const activeAdvisories = await advisoryData.getActiveAdvisoriesByBeachId(beachId);
 
-    return res.render('beaches/single', {
+    return res.render('beaches/detail', {
       title: beach.beachName,
       beach: beach,
       activeAdvisories: activeAdvisories,

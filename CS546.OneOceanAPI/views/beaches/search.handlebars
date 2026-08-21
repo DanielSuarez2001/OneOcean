@@ -107,11 +107,7 @@
         <!-- Left Side: Image, Name, Location -->
         <div class="result-left">
           <a href="/beaches/{{this._id}}" class="image-wrapper">
-            {{#if this.strBeachThumb}}
-              <img class="searchResultImage" alt="{{this.beachName}}" src="{{this.strBeachThumb}}">
-            {{else}}
-              <img class="searchResultImage" alt="No Image Available" src="/public/images/no_image.jpeg">
-            {{/if}}
+            <img class="searchResultImage" alt="{{this.beachName}}" src="/images/beachStockImage.jpg">
           </a>
           <h3 class="searchResult-name">{{this.beachName}}</h3>
           <div class="beach-location">{{this.city}}, {{this.county}}</div>
