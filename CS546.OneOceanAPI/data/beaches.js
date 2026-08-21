@@ -123,6 +123,10 @@ let exportedMethods = {
             ];
         }
 
+        if (filters.name && typeof filters.name === 'string' && filters.name.trim().length > 0) {
+            query.beachName = { $regex: new RegExp(filters.name.trim(), 'i') };
+        }
+
         if (filters.county && typeof filters.county === 'string' && filters.county.trim().length > 0) {
             query.county = { $regex: new RegExp(filters.county.trim(), 'i') };
         }

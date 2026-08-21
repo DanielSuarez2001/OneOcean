@@ -110,5 +110,9 @@ export const beachesIndexes = [
     key: { beachId: 1 },
     name: 'beaches_beachId_unique',
     unique: true
+  },
+  {
+    key: { geoObject: '2dsphere' },
+    name: 'beaches_geoObject_2dsphere'
   }
 ];

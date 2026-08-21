@@ -8,6 +8,11 @@ import { checkId, checkString, checkNumber, errorMessage } from '../helpers.js';
 
 const router = Router();
 
+const SANTA_MONICA_STATE_BEACH_CENTER = {
+  longitude: (-118.49 + -118.51) / 2,
+  latitude: (34.025 + 34.005) / 2
+};
+
 const toMapBeach = (b) => ({
   _id: b._id,
   beachName: b.beachName,
@@ -33,6 +38,7 @@ const serializeForScriptTag = (value) =>
 // ==========================================
 router.get('/', async (req, res) => {
   try {
+
     let allBeaches = await beachData.getAllBeaches();
 
     const { 
@@ -49,54 +55,9 @@ router.get('/', async (req, res) => {
       minAutoRating,
       maxAutoRating,
       minSize,
-      maxSize
+      maxSize,
+      proximityDistance
     } = req.query;
-
-    if (search && search.trim().length > 0) {
-      const query = search.trim().toLowerCase();
-      allBeaches = allBeaches.filter(
-        (beach) =>
-          (beach.beachName && beach.beachName.toLowerCase().includes(query)) ||
-          (beach.county && beach.county.toLowerCase().includes(query)) ||
-          (beach.city && beach.city.toLowerCase().includes(query))
-      );
-    }
-    
-    if (name && name.trim().length > 0) {
-      const nameQuery = name.trim().toLowerCase();
-      allBeaches = allBeaches.filter((b) =>
-        b.beachName && b.beachName.toLowerCase().includes(nameQuery)
-      );
-    }
-
-    if (county && county.trim().length > 0) {
-      const countyQuery = county.trim().toLowerCase();
-      allBeaches = allBeaches.filter((b) =>
-        b.county && b.county.toLowerCase().includes(countyQuery)
-      );
-    }
-
-    if (city && city.trim().length > 0) {
-      const cityQuery = city.trim().toLowerCase();
-      allBeaches = allBeaches.filter((b) =>
-        b.city && b.city.toLowerCase().includes(cityQuery)
-      );
-    }
-
-    if (status && status.trim().length > 0) {
-      const statusQuery = status.trim().toLowerCase();
-      allBeaches = allBeaches.filter(
-        (b) => b.status && b.status.toLowerCase() === statusQuery
-      );
-    }
-
-    if (waterQuality && waterQuality.trim().length > 0 && !isNaN(+waterQuality)) {
-      const minWaterQuality = parseFloat(waterQuality);
-      allBeaches = allBeaches.filter((b) =>
-        b.waterQuality !== null && b.waterQuality !== undefined &&
-        b.waterQuality >= minWaterQuality
-      );
-    }
 
     const effectiveMinLength = minLength || minSize;
     if (effectiveMinLength && !isNaN(+effectiveMinLength)) {
@@ -136,7 +97,8 @@ router.get('/', async (req, res) => {
     return res.render('beaches/search', {
       title: 'Explore Beaches',
       beaches: allBeaches,
-      searchQuery: search || name || county || city ||''
+      searchQuery: search || name || county || city || '',
+      proximityDistance: proximityDistance || ''
     });
   } catch (e) {
     return res.status(500).render('error', { error: 'Could not fetch beaches.' });
