@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import beachData from '../data/beaches.js';
 import advisoryData from '../data/advisories.js';
+import userData from '../data/users.js';
 import beachUtils from '../utils/beach_utils.js';
 import advisoryUtils from '../utils/advisory_utils.js';
 
@@ -99,6 +100,17 @@ router.get('/', async (req, res) => {
     if (maxAutoRating && !isNaN(+maxAutoRating)) {
       allBeaches = allBeaches.filter((b) => b.autoRating !== null && b.autoRating !== undefined && b.autoRating <= parseFloat(maxAutoRating));
     }
+
+    const currentUser = req.session && req.session.user
+      ? await userData.getUserById(req.session.user._id)
+      : null;
+    const favoriteBeachIds = new Set(
+      (currentUser?.favoriteBeaches || []).map((beachId) => beachId.toString())
+    );
+    allBeaches = allBeaches.map((beach) => ({
+      ...beach,
+      isBookmarked: favoriteBeachIds.has(beach._id.toString())
+    }));
 
     return res.render('beaches/search', {
       title: 'Explore Beaches',
@@ -231,13 +243,18 @@ router.get('/:id', async (req, res) => {
     const ownRating = userId && Array.isArray(beach.BeachRatings)
       ? beach.BeachRatings.find((r) => r.raterId.toString() === userId)
       : null;
+    const currentUser = userId ? await userData.getUserById(userId) : null;
+    const isBookmarked = Boolean(currentUser?.favoriteBeaches?.some(
+      (favoriteBeachId) => favoriteBeachId.toString() === beach._id
+    ));
 
     return res.render('beaches/detail', {
       title: beach.beachName,
       beach: beach,
       activeAdvisories: activeAdvisories,
       hasActiveAdvisories: activeAdvisories.length > 0,
-      ownRating: ownRating || null
+      ownRating: ownRating || null,
+      isBookmarked: isBookmarked
     });
   } catch (e) {
     return res.status(404).render('error', { error: 'Beach not found.' });

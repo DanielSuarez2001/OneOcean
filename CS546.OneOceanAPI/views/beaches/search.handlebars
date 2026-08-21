@@ -121,6 +121,9 @@
           </div>
           <div class="user-rating"><strong>User Rating:</strong> {{#if this.userRating}}{{this.userRating}}{{else}}N/A{{/if}}</div>
           <div class="auto-rating"><strong>Auto Rating:</strong> {{#if this.autoRating}}{{this.autoRating}} / 5{{else}}N/A{{/if}}</div>
+          <div class="bookmark-status">
+            <strong>{{#if this.isBookmarked}}Bookmarked{{else}}Not Bookmarked{{/if}}</strong> 
+          </div>
         </div>
       </li>
     {{/each}}
